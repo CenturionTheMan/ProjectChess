@@ -1,8 +1,8 @@
-using Chess.Utilities;
+using ChessLibrary.Utilities;
 using System.Collections;
 using System.Collections.Generic;
 
-namespace Chess.Engine
+namespace ChessLibrary.Engine
 {
     public class ChessPiece
     {

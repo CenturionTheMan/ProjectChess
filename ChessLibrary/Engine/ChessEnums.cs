@@ -1,7 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
-namespace Chess.Engine
+namespace ChessLibrary.Engine
 {
     public enum PieceClasses
     {
@@ -26,5 +26,13 @@ namespace Chess.Engine
         TO_ROOK,
         TO_BISHOP,
         NONE
+    }
+
+    public enum GameResult
+    {
+        NONE,
+        WHITE_WON,
+        BLACK_WON,
+        DRAW
     }
 }

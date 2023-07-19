@@ -1,8 +1,8 @@
-using Chess.Utilities;
+using ChessLibrary.Utilities;
 using System.Collections;
 using System.Collections.Generic;
 
-namespace Chess.Engine
+namespace ChessLibrary.Engine
 {
     public class MovesValidator
     {
@@ -25,12 +25,6 @@ namespace Chess.Engine
 
         private void InitData()
         {
-            //sudoValidMovesWhite.Clear();
-            //sudoValidMovesBlack.Clear();
-            //checkMoveWhite = null;
-            //checkMoveBlack = null;
-            //pinMovesWhite.Clear();
-            //pinMovesBlack.Clear();
             sudoValidMovesWhite = new(MAX_MOVES_AMOUNT);
             sudoValidMovesBlack = new(MAX_MOVES_AMOUNT);
             checkMoveWhite = null;
@@ -49,6 +43,13 @@ namespace Chess.Engine
 
             (List<Move> validMovesWhite, List<Move> validMovesBlack) = FindValidMoves();
             return (validMovesWhite, validMovesBlack);
+        }
+
+        public bool IsChecked(ChessColors color)
+        {
+            if (color == ChessColors.WHITE && checkMoveBlack != null) return true;
+            if (color == ChessColors.BLACK && checkMoveWhite != null) return true;
+            return false;
         }
 
         private void FindSudoValidMoves()
@@ -131,16 +132,29 @@ namespace Chess.Engine
                         else if (move.IsCastling) //castling
                         {
                             int dir = (move.FromPos.X - move.ToPos.X < 0) ? 1 : -1;
-                            int range = (dir == 1) ? 3 : 4;
-
+                            int range = (dir == 1) ? 2 : 3;
+                            bool isSkip = false;
                             for (int i = 1; i <= range; i++)
                             {
-                                if (enemyAttackZone[move.FromPos.X + dir * i, move.FromPos.Y])
+                                int toCheckX = move.FromPos.X + dir * i;
+                                bool isAttacked =(dir == -1 && i == range)? false : enemyAttackZone[toCheckX, move.FromPos.Y];
+                                bool isOccupied = board.GetCell(toCheckX, move.FromPos.Y).HasPiece();
+                                if (isAttacked || isOccupied)
                                 {
-                                    continue;
+                                    isSkip = true;
+                                    break;
                                 }
                             }
+                            if (isSkip)
+                            {
+                                continue;
+                            }
+
                             validMoves.Add(move);
+                        }
+                        else if(piece.PieceClass == PieceClasses.KING && (enemyAttackZone[move.ToPos.X, move.ToPos.Y] == true))//king
+                        {
+                            continue;
                         }
                         else
                         {
@@ -170,6 +184,18 @@ namespace Chess.Engine
             }
         }
 
+        private void AddAttackZone(ChessColors color, Vec2 pos)
+        {
+            if (color == ChessColors.WHITE)
+            {
+                attackZoneWhite[pos.X, pos.Y] = true;
+            }
+            else
+            {
+                attackZoneBlack[pos.X, pos.Y] = true;
+            }
+        }
+
 
 
         private void GetRookRawMoves(ChessPiece piece)
@@ -196,13 +222,27 @@ namespace Chess.Engine
 
                     if (!cell.HasPiece(out var occupying))
                     {
-                        AddSudoValidMove(piece.PieceColor, new Move(piece.Position, checkPos));
+                        AddSudoValidMove(piece.PieceColor, new Move(piece.Position, checkPos, piece, null));
                         continue;
                     }
 
                     if (piece.PieceColor != occupying.PieceColor)
                     {
-                        AddSudoValidMove(piece.PieceColor, new Move(piece.Position, checkPos, occupying));
+                        var move = new Move(piece.Position, checkPos, piece, occupying);
+                        if (occupying.PieceClass == PieceClasses.KING) //check
+                        {
+                            HashSet<Vec2> posInRange = new HashSet<Vec2>();
+                            posInRange.Add(new Vec2(piece.Position));
+
+                            if (piece.PieceColor == ChessColors.WHITE) checkMoveWhite = (move, posInRange);
+                            else checkMoveBlack = (move, posInRange);
+                        }
+
+                        AddSudoValidMove(piece.PieceColor, move);
+                    }
+                    else
+                    {
+                        AddAttackZone(piece.PieceColor, occupying.Position);
                     }
  
                 }
@@ -226,7 +266,7 @@ namespace Chess.Engine
             var cell = board.GetCell(piece.Position + forward);
             if (cell != null && cell.HasPiece() == false)
             {
-                var move = new Move(piece.Position, cell.Position);
+                var move = new Move(piece.Position, cell.Position, piece, null);
                 move.IsPromotion = promotionHight == cell.Position.Y;
                 AddSudoValidMove(piece.PieceColor, move, false);
             }
@@ -235,9 +275,10 @@ namespace Chess.Engine
             if (!board.HasPieceMoved(piece))
             {
                 cell = board.GetCell(piece.Position + forward + forward);
-                if (cell != null && cell.HasPiece() == false)
+                var cellSingle = board.GetCell(piece.Position + forward);
+                if (cellSingle.HasPiece() == false && cell != null && cell.HasPiece() == false)
                 {
-                    var move = new Move(piece.Position, cell.Position);
+                    var move = new Move(piece.Position, cell.Position, piece, null);
                     move.IsPawnTwoForward = true;
                     AddSudoValidMove(piece.PieceColor, move);
                 }
@@ -245,36 +286,71 @@ namespace Chess.Engine
 
             //forward-right capture
             cell = board.GetCell(piece.Position + forward + Vec2.Right);
-            if (cell != null && cell.HasPiece(out ChessPiece rightPiece) == true)
+            if (cell != null && cell.HasPiece(out ChessPiece rightPiece) == true && rightPiece.PieceColor != piece.PieceColor)
             {
-                var move = new Move(piece.Position, cell.Position, rightPiece);
+                var move = new Move(piece.Position, cell.Position, piece, rightPiece);
                 move.IsPromotion = promotionHight == cell.Position.Y;
+
+                if (rightPiece.PieceClass == PieceClasses.KING) //check
+                {
+                    HashSet<Vec2> posInRange = new HashSet<Vec2>();
+                    posInRange.Add(new Vec2(piece.Position));
+
+                    if (piece.PieceColor == ChessColors.WHITE) checkMoveWhite = (move, posInRange);
+                    else checkMoveBlack = (move, posInRange);
+                }
+
                 AddSudoValidMove(piece.PieceColor, move);
+            }
+            else if(cell != null)
+            {
+                AddAttackZone(piece.PieceColor, cell.Position);
             }
 
             //forward-left capture
             cell = board.GetCell(piece.Position + forward + Vec2.Left);
-            if (cell != null && cell.HasPiece(out ChessPiece leftPiece) == true)
+            if (cell != null && cell.HasPiece(out ChessPiece leftPiece) == true && leftPiece.PieceColor != piece.PieceColor)
             {
-                var move = new Move(piece.Position, cell.Position, leftPiece);
+                var move = new Move(piece.Position, cell.Position, piece, leftPiece);
                 move.IsPromotion = promotionHight == cell.Position.Y;
+
+                if (leftPiece.PieceClass == PieceClasses.KING) //check
+                {
+                    HashSet<Vec2> posInRange = new HashSet<Vec2>();
+                    posInRange.Add(new Vec2(piece.Position));
+
+                    if (piece.PieceColor == ChessColors.WHITE) checkMoveWhite = (move, posInRange);
+                    else checkMoveBlack = (move, posInRange);
+                }
+
                 AddSudoValidMove(piece.PieceColor, move);
+            }
+            else if (cell != null)
+            {
+                AddAttackZone(piece.PieceColor, cell.Position);
             }
 
             //EnPassantCapture left
             cell = board.GetCell(piece.Position + Vec2.Left);
-            if(cell != null && cell.HasPiece(out var enPassantLeft) && board.HasPieceMoved(enPassantLeft, out Move moveLeft) && moveLeft.IsPawnTwoForward)
+            if(cell != null && cell.HasPiece(out var enPassantLeft) 
+                && board.HasPieceMoved(enPassantLeft, out Move moveLeft)
+                && enPassantLeft.PieceColor != piece.PieceColor
+                && moveLeft.IsPawnTwoForward && 1 == board.PlayedMoves.Count - moveLeft.OrderInPlayedMoves)
             {
-                var move = new Move(piece.Position, cell.Position + forward, enPassantLeft);
+                var move = new Move(piece.Position, cell.Position + forward, piece, enPassantLeft);
                 move.IsEnPassantCapture = true;
                 AddSudoValidMove(piece.PieceColor, move, false);
             }
 
             //EnPassantCapture right
             cell = board.GetCell(piece.Position + Vec2.Right);
-            if (cell != null && cell.HasPiece(out var enPassantRight) && board.HasPieceMoved(enPassantRight, out Move moveRight) && moveRight.IsPawnTwoForward)
+            if (cell != null && cell.HasPiece(out var enPassantRight) 
+                && board.HasPieceMoved(enPassantRight, out Move moveRight)
+                && enPassantRight.PieceColor != piece.PieceColor
+                && moveRight.IsPawnTwoForward 
+                && 1 == board.PlayedMoves.Count - moveRight.OrderInPlayedMoves)
             {
-                var move = new Move(piece.Position, cell.Position + forward, enPassantRight);
+                var move = new Move(piece.Position, cell.Position + forward, piece, enPassantRight);
                 move.IsEnPassantCapture = true;
                 AddSudoValidMove(piece.PieceColor, move, false);
             }
@@ -304,12 +380,12 @@ namespace Chess.Engine
             {
                 if (!board.HasPieceMoved(rookS)) //can do short (no check checked)
                 {
-                    var move1 = new Move(piece.Position, rookS.Position, rookS);
-                    var move2 = new Move(piece.Position, rookS.Position + Vec2.Left, rookS);
-                    move1.IsCastling = true;
-                    move2.IsCastling = true;
+                    var move1 = new Move(piece.Position, piece.Position + Vec2.Right + Vec2.Right, piece, rookS);
+                    //var move2 = new Move(piece.Position, piece.Position + Vec2.Right + Vec2.Right, piece, rookS);
+                    move1.SetCastling(rookS.Position);
+                    //move2.SetCastling(rookS.Position + Vec2.Left);
                     AddSudoValidMove(piece.PieceColor, move1, false);
-                    AddSudoValidMove(piece.PieceColor, move2, false);
+                    //AddSudoValidMove(piece.PieceColor, move2, false);
                 }
             }
 
@@ -317,12 +393,12 @@ namespace Chess.Engine
             {
                 if (!board.HasPieceMoved(rookL)) //can do long (no check checked)
                 {
-                    var move1 = new Move(piece.Position, rookL.Position, rookL);
-                    var move2 = new Move(piece.Position, rookL.Position + Vec2.Right, rookL);
-                    move1.IsCastling = true;
-                    move2.IsCastling = true;
+                    var move1 = new Move(piece.Position, piece.Position + Vec2.Left + Vec2.Left, piece, rookL);
+                    //var move2 = new Move(piece.Position, piece.Position + Vec2.Left + Vec2.Left, piece, rookL);
+                    move1.SetCastling(rookL.Position);
+                    //move2.SetCastling(rookL.Position + Vec2.Right);
                     AddSudoValidMove(piece.PieceColor, move1, false);
-                    AddSudoValidMove(piece.PieceColor, move2, false);
+                    //AddSudoValidMove(piece.PieceColor, move2, false);
                 }
             }
         }
@@ -362,17 +438,19 @@ namespace Chess.Engine
                     posInRange.Add(checkPos);
                     if (enemiesAmount == 0)
                     {
-                        Move move = new Move(piece.Position, checkPos);
+                        Move move = new Move(piece.Position, checkPos, piece, null);
                         AddSudoValidMove(piece.PieceColor, move);
                     }
                     
                 }
                 else if (piece.PieceColor != occupying.PieceColor)
                 {
-                    var move = new Move(piece.Position, checkPos, occupying);
+                    var move = new Move(piece.Position, checkPos, piece, occupying);
 
                     if (occupying.PieceClass == PieceClasses.KING && enemiesAmount == 0) //check
                     {
+                        posInRange.Add(piece.Position);
+
                         if (piece.PieceColor == ChessColors.WHITE) checkMoveWhite = (move, posInRange);
                         else checkMoveBlack = (move, posInRange);
 
@@ -382,6 +460,7 @@ namespace Chess.Engine
                     }
                     else if(occupying.PieceClass == PieceClasses.KING && enemiesAmount == 1) //pin
                     {
+                        posInRange.Add(new Vec2(piece.Position));
                         if (piece.PieceColor == ChessColors.WHITE) pinnedPiecesBlack.Add(firstEnemyFound, posInRange);
                         else pinnedPiecesWhite.Add(firstEnemyFound, posInRange);
 
@@ -399,6 +478,7 @@ namespace Chess.Engine
                 }
                 else
                 {
+                    AddAttackZone(piece.PieceColor, occupying.Position);
                     break;
                 }
             }

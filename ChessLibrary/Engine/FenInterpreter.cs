@@ -1,41 +1,50 @@
 using System.Collections;
 using System.Collections.Generic;
 
-namespace Chess.Engine
+namespace ChessLibrary.Engine
 {
     public static class FenInterpreter
     {
-        public static (ChessColors currentSide, List<ChessPiece> pieces) GetSetupFromFen(string fen)
+        public static bool GetSetupFromFen(string fen, out ChessColors? currentSide, out List<ChessPiece>? pieces)
         {
-            var toHandle = fen.Split(" ");
-
-            List<ChessPiece> pieces = new List<ChessPiece>();
-            ChessColors currentSide = toHandle[1] == "w" ? ChessColors.WHITE : ChessColors.BLACK;
-
-            int currentY = 7;
-            int currentX = 0;
-
-            foreach (var c in toHandle[0])
+            pieces = null;
+            currentSide = null;
+            try
             {
-                if (c == '/')
-                {
-                    currentY--;
-                    currentX = 0;
-                    continue;
-                }
-                if (c >= 48 && c <= 57)
-                {
-                    int offset = c - 48;
-                    currentX += offset;
-                    continue;
-                }
+                var toHandle = fen.Split(" ");
+                pieces = new List<ChessPiece>();
+                currentSide = toHandle[1] == "w" ? ChessColors.WHITE : ChessColors.BLACK;
 
-                var piece = CharToPiece(c);
-                piece.SetPosition(currentX, currentY);
-                pieces.Add(piece);
-                currentX++;
+                int currentY = 7;
+                int currentX = 0;
+
+                foreach (var c in toHandle[0])
+                {
+                    if (c == '/')
+                    {
+                        currentY--;
+                        currentX = 0;
+                        continue;
+                    }
+                    if (c >= 48 && c <= 57)
+                    {
+                        int offset = c - 48;
+                        currentX += offset;
+                        continue;
+                    }
+
+                    var piece = CharToPiece(c);
+                    piece.SetPosition(currentX, currentY);
+                    pieces.Add(piece);
+                    currentX++;
+                }
+                return true;
             }
-            return (currentSide, pieces);
+            catch (Exception)
+            {
+                return false;
+                throw;
+            }
         }
 
         private static ChessPiece CharToPiece(char c)

@@ -55,14 +55,29 @@ namespace Chess.Gui
             Console.Write("\n");
         }
 
-        public void DebugPrintValidMoves(ChessBoard board, params PieceClasses[] classesToShow)
+        public void DebugPrintValidMoves(ChessBoard board, bool showWhite, bool showBlack, params PieceClasses[] classesToShow)
         {
             ClearConsole();   
             (var whiteMoves, var blackMoves) = board.GetListOfValidMoves();
 
-            var currentMoves = (board.CurrentSide == ChessColors.WHITE) ? whiteMoves : blackMoves;
-            var sewed = currentMoves.FindAll(m => classesToShow.Contains(board.GetCell(m.FromPos).GetPiece().PieceClass));
+            List<Move> currentMoves = new();
+            if (showWhite == false && showBlack == false)
+            {
+                currentMoves = (board.CurrentSide == ChessColors.WHITE) ? whiteMoves : blackMoves;
+            }
+            else
+            {
+                if (showWhite)
+                {
+                    currentMoves.AddRange(whiteMoves);
+                }
+                if (showBlack)
+                {
+                    currentMoves.AddRange(blackMoves);
+                }
+            }
 
+            var sewed = currentMoves.FindAll(m => classesToShow.Contains(board.GetCell(m.FromPos).GetPiece().PieceClass));
 
             int size = ChessBoard.BOARD_SIZE;
             for (int y = size - 1; y >= 0; y--)
@@ -74,7 +89,7 @@ namespace Chess.Gui
                 {
                     ConsoleColor color = ((x + y) % 2 == 1) ? WHITE_CELL : BLACK_CELL;
 
-                    var result = sewed.Find(i => i.ToPos.X == x && i.ToPos.Y == y);
+                    var result = sewed.Find(i => i.GetTriggerPos().X == x && i.GetTriggerPos().Y == y);
                     if(result != null)
                         color = ConsoleColor.Green;
 
@@ -115,6 +130,24 @@ namespace Chess.Gui
 
                 }
 
+                if(y == 5)
+                {
+                    Console.ResetColor();
+                    Console.Write(EMPTY_CELL + "WHITE VALID MOVES COUNT:   ");
+                    Console.ForegroundColor = WHITE_CELL;
+                    string lastMoveStr = whiteMoves.Count().ToString();
+                    Console.Write(lastMoveStr);
+                }
+
+                if (y == 4)
+                {
+                    Console.ResetColor();
+                    Console.Write(EMPTY_CELL + "BLACK VALID MOVES COUNT:   ");
+                    Console.ForegroundColor = BLACK_CELL;
+                    string lastMoveStr = blackMoves.Count().ToString();
+                    Console.Write(lastMoveStr);
+                }
+
                 Console.Write("\n");
 
             }
@@ -132,7 +165,7 @@ namespace Chess.Gui
             Console.Write("\n");
         }
 
-        private void PrintBoard(ChessBoard board)
+        public void PrintBoard(ChessBoard board)
         {
             int width = ChessBoard.BOARD_SIZE;
             int height = ChessBoard.BOARD_SIZE;

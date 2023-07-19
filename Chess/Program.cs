@@ -1,4 +1,4 @@
-﻿using Chess.Engine;
+﻿using .Engine;
 using Chess.Gui;
 using System.Reflection;
 
@@ -6,30 +6,76 @@ namespace Chess
 {
     public class Program
     {
+        private static ConsolePrinter printer = new ConsolePrinter(); 
+
         public static void Main()
         {
             //RunGame();
-            RunDebug();
+            RunDebug1();
+
         }
 
-        private static void RunDebug()
+        private static int MoveGeneration(ChessBoard board, int depth)
         {
-            ChessBoard board = new ChessBoard("r3k3/8/8/8/8/3q3p/7R/4K3 w");
-            //ChessBoard board = new ChessBoard("8/8/8/8/8/8/8/4K3 w");
-            ConsolePrinter printer = new ConsolePrinter();
+            if (depth == 0)
+            {
+                return 1;
+            }
+            var currentMoves = board.GetListOfValidMovesForCurrentSide();
+            int movesAmount = 0;
+
+            foreach (var move in currentMoves)
+            {
+                board.MakeMove(move);
+                printer.PrintBoard(board);
+                Console.ReadKey();
+                printer.ClearConsole();
+                movesAmount += MoveGeneration(board, depth - 1);
+                board.UnMakeLastMove();
+            }
+
+            return movesAmount;
+        }
+
+        private static void RunDebug1()
+        {
+            ChessBoard board = new ChessBoard("7r/8/8/8/8/8/8/R3K1PR w");
+
+            board.OnMoveMade += DebugMakeMove;
+            board.OnLastMoveUnMade += DebugUnMakeMove;
 
 
-            printer.DebugPrintValidMoves(board, PieceClasses.PAWN, PieceClasses.KING, PieceClasses.ROOK, PieceClasses.QUEEN);
+
+            printer.DebugPrintValidMoves(board, false, false, PieceClasses.KING);
+
             Console.ReadLine();
 
-            board.ChangeCurrentlyPlayingSide();
-            DebugDoMove(board, printer, "d3e3");
+            board.TryMakeMove("e1a1");
+            board.UnMakeLastMove();
+            board.TryMakeMove("g1g2");
+            board.TryMakeMove("h8b8");
+            bool result = board.TryMakeMove("e1a1"); //true
+            board.UnMakeLastMove();
+            board.UnMakeLastMove();
+            board.TryMakeMove("h8c8");
+            result = board.TryMakeMove("e1a1"); //false
+            board.UnMakeLastMove();
+            result = board.TryMakeMove("h8e8"); //false
 
+
+            Console.WriteLine(result);
         }
-        private static void DebugDoMove(ChessBoard board, ConsolePrinter printer, string move)
+
+        private static void DebugUnMakeMove(ChessBoard board)
         {
-            board.TryMakeMove(move);
-            printer.DebugPrintValidMoves(board, PieceClasses.PAWN, PieceClasses.KING, PieceClasses.ROOK, PieceClasses.QUEEN);
+            //printer.DebugPrintValidMoves(board, false, false, PieceClasses.PAWN, PieceClasses.KING, PieceClasses.ROOK, PieceClasses.QUEEN, PieceClasses.KNIGHT, PieceClasses.BISHOP);
+            printer.DebugPrintValidMoves(board, false, false, PieceClasses.KING);
+            Console.ReadLine();
+        }
+
+        private static void DebugMakeMove(ChessBoard board)
+        {
+            printer.DebugPrintValidMoves(board, false, false, PieceClasses.KING);
             Console.ReadLine();
         }
 
