@@ -30,9 +30,9 @@ namespace ChessGui_WF
 
         private Vec2[,] cellsPositions;
 
-        private GameManager board;
+        private Game game;
 
-        private Dictionary<BoardEntityFactory, Image> imagesDic;
+        private Dictionary<uint, Image> imagesDic;
 
         private Vec2? clickedMousePosFrom = null;
         private Vec2? clickedMousePosFromPrev = null;
@@ -41,47 +41,48 @@ namespace ChessGui_WF
         public BoardUserControl()
         {
             imagesDic = new();
-            cellsPositions = new Vec2[GameManager.BOARD_SINGLE_ROW_SIZE, GameManager.BOARD_SINGLE_ROW_SIZE];
+            cellsPositions = new Vec2[Board.BOARD_SINGLE_ROW_SIZE, Board.BOARD_SINGLE_ROW_SIZE];
             InitializeComponent();
 
             windowSize = new Vec2(this.Size.Width, this.Size.Height);
             windowOffset = new Vec2((int)(windowSize.X * BOARD_OFFSET_PERC) / 2, (int)(windowSize.Y * BOARD_OFFSET_PERC) / 2);
-            int cellWidth = (windowSize.X - windowOffset.X * 2) / GameManager.BOARD_SINGLE_ROW_SIZE;
-            int cellHeight = (windowSize.Y - windowOffset.Y * 2) / GameManager.BOARD_SINGLE_ROW_SIZE;
+            int cellWidth = (windowSize.X - windowOffset.X * 2) / Board.BOARD_SINGLE_ROW_SIZE;
+            int cellHeight = (windowSize.Y - windowOffset.Y * 2) / Board.BOARD_SINGLE_ROW_SIZE;
             cellSize = new Vec2(cellWidth, cellHeight);
         }
 
-        public void InitGame(GameManager board)
+        public void InitGame(Game game)
         {
-            this.board = board;
+            this.game = game;
 
-            foreach (var piece in board.ChessPieceClasses)
+            foreach (var piecePos in game.GetPiecePositions())
             {
-                string imagePath = IMAGES_FOLDER_PATH + PieceToImagePath(piece);
+                _ = game.TryGetPieceAtPosition(piecePos, out PieceClasses pieceClass, out ChessColors color);
+                string imagePath = IMAGES_FOLDER_PATH + PieceToImagePath(pieceClass, color);
                 Image image = Image.FromFile(imagePath);
-                imagesDic.Add(piece, image);
+                imagesDic.TryAdd(BoardEntityFactory.CreatePiece(pieceClass, color), image);
             }
 
-            board.OnPawnPromotion += ChangePieceImage;
-            board.OnPawnPromotionReversed += ChangePieceImage;
 
             this.Invalidate();
         }
 
         public void UnmakeLastMove()
         {
-            if (board == null) return;
-            board.UnMakeLastMove();
+            return;
+            //if (board == null) return;
+            //board.UnMakeLastMove();
             this.Invalidate();
         }
 
-        private void ChangePieceImage(BoardEntityFactory piece)
+        private void ChangePieceImage(uint piece)
         {
             if(imagesDic.ContainsKey(piece))
             {
                 imagesDic.Remove(piece);
             }
-            string imagePath = IMAGES_FOLDER_PATH + PieceToImagePath(piece);
+            _ = BoardEntityFactory.CheckIfPiece(piece, out PieceClasses pieceClass, out ChessColors color);
+            string imagePath = IMAGES_FOLDER_PATH + PieceToImagePath(pieceClass, color);
             Image image = Image.FromFile(imagePath);
             imagesDic.Add(piece, image);
             this.Invalidate();
@@ -108,26 +109,26 @@ namespace ChessGui_WF
             Brush move = new SolidBrush(MOVE_COLOR);
             Brush clickedBrush = new SolidBrush(CLICKED_COLOR);
 
-            List<Move> validMoves = null;
-            if (clickedMousePosFrom != null)
-                validMoves = board.GetListOfValidMovesForCurrentSide().FindAll(m => m.FromPos == clickedMousePosFrom);
+            //List<Move> validMoves = null;
+            //if (clickedMousePosFrom != null)
+            //    validMoves = board.GetListOfValidMovesForCurrentSide().FindAll(m => m.FromPos == clickedMousePosFrom);
 
 
 
-            for (int y = 0; y < GameManager.BOARD_SINGLE_ROW_SIZE; y++)
+            for (int y = 0; y < Board.BOARD_SINGLE_ROW_SIZE; y++)
             {
-                for (int x = 0; x < GameManager.BOARD_SINGLE_ROW_SIZE; x++)
+                for (int x = 0; x < Board.BOARD_SINGLE_ROW_SIZE; x++)
                 {
                     Brush brush = ((x+y)%2==0)? blackBrush : whiteBrush;
 
-                    if (validMoves != null && validMoves.Exists(m => m.GetTriggerPos().Equals(x, y)))
-                    {
-                        brush = move;
-                    }
-                    else if (clickedMousePosFrom != null && clickedMousePosFrom.Equals(x, y))
-                    {
-                        brush = clickedBrush;
-                    }
+                    //if (validMoves != null && validMoves.Exists(m => m.GetTriggerPos().Equals(x, y)))
+                    //{
+                    //    brush = move;
+                    //}
+                    //else if (clickedMousePosFrom != null && clickedMousePosFrom.Equals(x, y))
+                    //{
+                    //    brush = clickedBrush;
+                    //}
 
                     int xWindowPos = windowOffset.X + x * cellSize.X;
                     int yWindowPos = windowSize.Y - windowOffset.Y - (y + 1) * cellSize.Y;
@@ -142,21 +143,22 @@ namespace ChessGui_WF
 
         private void DrawPieceClasses(Graphics g)
         {
-            if (board == null) return;
+            if (game == null) return;
 
-            foreach (var piece in board.ChessPieceClasses)
+            foreach (var piecePos in game.GetPiecePositions())
             {
+                var piece = game.GetCellCode(piecePos);
                 if (!imagesDic.TryGetValue(piece, out Image img)) continue;
-                int x = piece.Position.X;
-                int y = piece.Position.Y;
+                int y = (int)Math.Floor(piecePos / (float)8);
+                int x = piecePos - y*8;
                 g.DrawImage(img, cellsPositions[x, y].X, cellsPositions[x, y].Y, cellSize.X, cellSize.Y);
             }
         }
 
-        private string PieceToImagePath(BoardEntityFactory piece)
+        private string PieceToImagePath(PieceClasses pClass, ChessColors color)
         {
             string path = "";
-            switch (piece.PieceClass)
+            switch (pClass)
             {
                 case PieceClasses.KING:
                     path = "King";
@@ -180,7 +182,7 @@ namespace ChessGui_WF
                     throw new Exception();
             }
 
-            path += (piece.PieceColor == ChessColors.WHITE) ? "W" : "B";
+            path += (color == ChessColors.WHITE) ? "W" : "B";
             path += ".png";
             return path;
         }
@@ -223,17 +225,17 @@ namespace ChessGui_WF
 
         private void TryMakeMove(Vec2 pos)
         {
-            var moves = board.GetListOfValidMovesForCurrentSide();
-            var move = moves.Find(m => m.FromPos == clickedMousePosFrom && m.GetTriggerPos() == pos);
-            if (move != null)
-            {
-                board.MakeMove(move);
-                clickedMousePosFrom = null;
-            }
-            else
-            {
-                clickedMousePosFrom = pos;
-            }
+            //var moves = board.GetListOfValidMovesForCurrentSide();
+            //var move = moves.Find(m => m.FromPos == clickedMousePosFrom && m.GetTriggerPos() == pos);
+            //if (move != null)
+            //{
+            //    board.MakeMove(move);
+            //    clickedMousePosFrom = null;
+            //}
+            //else
+            //{
+            //    clickedMousePosFrom = pos;
+            //}
         }
 
         private void BoardUserControl_MouseUp(object sender, MouseEventArgs e)

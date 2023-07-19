@@ -9,48 +9,32 @@ namespace ChessLibrary.Engine
 {
     public class Move
     {
-        //public readonly bool IsBlocked;
-        
-        public readonly Vec2 FromPos;
-        public readonly Vec2 ToPos;
-        
-        public BoardEntityFactory ToMovePiece;
-        public BoardEntityFactory? OtherPiece = null;
+        public readonly int FromPos;
+        public readonly int ToPos;
 
-        public Promotions promotion = Promotions.NONE;
-        public bool IsPromotion = false;
-        public bool IsCastling { get; private set; }
+        private uint flags = 0b0000_0000_0000_0000_0000_0000_0000_0000;
 
-        public bool IsPawnTwoForward = false;
-        public bool IsEnPassantCapture = false;
+        //public readonly uint ToMovePiece;
 
-        public int FiftyMoveRuleToThisMove = -1;
 
-        public int OrderInPlayedMoves = -1;
-
-        private Vec2 triggerPos = null;
+        public int? AffectedFromPos = null;
+        public int? AffectedToPos = null;
 
 
 
-        public Move(Vec2 from, Vec2 to, BoardEntityFactory toMovePiece, BoardEntityFactory? capturedPiece)
+
+        public Move(int from, int to)
         {
-            FromPos = new Vec2(from);
-            ToPos = new Vec2(to);
-            ToMovePiece = toMovePiece;
-            OtherPiece = capturedPiece;
-
-            IsCastling = false;
+            FromPos = from;
+            ToPos = to;
         }
 
-        public void SetCastling(Vec2 triggerPos)
-        {
-            IsCastling = true;
-            this.triggerPos = triggerPos;
-        }
 
-        public Vec2 GetTriggerPos()
+        public Move AddAffectedPiece(int affectedFromPos, int affectedToPos)
         {
-            return (IsCastling)? triggerPos : ToPos;
+            this.AffectedToPos = affectedToPos;
+            this.AffectedFromPos = affectedFromPos;
+            return this;
         }
     }
 }

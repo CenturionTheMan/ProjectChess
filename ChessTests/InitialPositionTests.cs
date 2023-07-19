@@ -57,7 +57,7 @@ namespace ChessTests
 
         private int TestDepth(int depth)
         {
-            GameManager board = new GameManager("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w");
+            Game board = new Game("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w");
 
             int movesAmount = MoveGeneration(board, depth);
             return movesAmount;
@@ -73,7 +73,7 @@ namespace ChessTests
             enPassantCaptureAmount = 0;
         }
 
-        private int MoveGeneration(GameManager board, int depth)
+        private int MoveGeneration(Game board, int depth)
         {
             if (depth == 0)
             {

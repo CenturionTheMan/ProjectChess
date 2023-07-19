@@ -1,4 +1,5 @@
 using ChessLibrary.Engine;
+using System.Drawing;
 
 namespace ChessGui_WF
 {
@@ -11,10 +12,11 @@ namespace ChessGui_WF
 
         private void startButton_Click(object sender, EventArgs e)
         {
-            if (!FenInterpreter.GetSetupFromFen(initPosTextBox.Text, out var currentSide, out var PieceClasses)) return;
+            if (!ChessStringsHandler.GetSetupFromFen(initPosTextBox.Text, out uint[] board, out ChessColors? currentSide, out bool[] castling, out int enPassantPosition, out int halfmoves, out int fullmove)) return;
 
-            GameManager board = new GameManager(currentSide.Value, PieceClasses);
-            boardUserControl.InitGame(board);
+
+            Game game = new Game(board,currentSide, castling, enPassantPosition, halfmoves, fullmove);
+            boardUserControl.InitGame(game);
         }
 
         private void unmakeLastMove_Click(object sender, EventArgs e)

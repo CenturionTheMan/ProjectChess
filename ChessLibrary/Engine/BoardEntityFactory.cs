@@ -7,8 +7,8 @@ namespace ChessLibrary.Engine
 {
     public abstract class BoardEntityFactory
     {
-        private const uint PIECE_MASK = 0x0000_0011;
-        private const uint COLOR_MASK = 0x1000_0000;
+        private const uint PIECE_MASK = 0b00000000_00000000_00000000_1111_1111;
+        private const uint COLOR_MASK = 0b11000000_00000000_00000000_0000_0000;
 
         public BoardEntityFactory()
         {
