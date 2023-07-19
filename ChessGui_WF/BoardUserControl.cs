@@ -30,9 +30,9 @@ namespace ChessGui_WF
 
         private Vec2[,] cellsPositions;
 
-        private ChessBoard board;
+        private GameManager board;
 
-        private Dictionary<ChessPiece, Image> imagesDic;
+        private Dictionary<BoardEntityFactory, Image> imagesDic;
 
         private Vec2? clickedMousePosFrom = null;
         private Vec2? clickedMousePosFromPrev = null;
@@ -41,21 +41,21 @@ namespace ChessGui_WF
         public BoardUserControl()
         {
             imagesDic = new();
-            cellsPositions = new Vec2[ChessBoard.BOARD_SIZE, ChessBoard.BOARD_SIZE];
+            cellsPositions = new Vec2[GameManager.BOARD_SINGLE_ROW_SIZE, GameManager.BOARD_SINGLE_ROW_SIZE];
             InitializeComponent();
 
             windowSize = new Vec2(this.Size.Width, this.Size.Height);
             windowOffset = new Vec2((int)(windowSize.X * BOARD_OFFSET_PERC) / 2, (int)(windowSize.Y * BOARD_OFFSET_PERC) / 2);
-            int cellWidth = (windowSize.X - windowOffset.X * 2) / ChessBoard.BOARD_SIZE;
-            int cellHeight = (windowSize.Y - windowOffset.Y * 2) / ChessBoard.BOARD_SIZE;
+            int cellWidth = (windowSize.X - windowOffset.X * 2) / GameManager.BOARD_SINGLE_ROW_SIZE;
+            int cellHeight = (windowSize.Y - windowOffset.Y * 2) / GameManager.BOARD_SINGLE_ROW_SIZE;
             cellSize = new Vec2(cellWidth, cellHeight);
         }
 
-        public void InitGame(ChessBoard board)
+        public void InitGame(GameManager board)
         {
             this.board = board;
 
-            foreach (var piece in board.ChessPieces)
+            foreach (var piece in board.ChessPieceClasses)
             {
                 string imagePath = IMAGES_FOLDER_PATH + PieceToImagePath(piece);
                 Image image = Image.FromFile(imagePath);
@@ -75,7 +75,7 @@ namespace ChessGui_WF
             this.Invalidate();
         }
 
-        private void ChangePieceImage(ChessPiece piece)
+        private void ChangePieceImage(BoardEntityFactory piece)
         {
             if(imagesDic.ContainsKey(piece))
             {
@@ -114,9 +114,9 @@ namespace ChessGui_WF
 
 
 
-            for (int y = 0; y < ChessBoard.BOARD_SIZE; y++)
+            for (int y = 0; y < GameManager.BOARD_SINGLE_ROW_SIZE; y++)
             {
-                for (int x = 0; x < ChessBoard.BOARD_SIZE; x++)
+                for (int x = 0; x < GameManager.BOARD_SINGLE_ROW_SIZE; x++)
                 {
                     Brush brush = ((x+y)%2==0)? blackBrush : whiteBrush;
 
@@ -140,11 +140,11 @@ namespace ChessGui_WF
             this.BackColor = BORDER_COLOR;
         }
 
-        private void DrawPieces(Graphics g)
+        private void DrawPieceClasses(Graphics g)
         {
             if (board == null) return;
 
-            foreach (var piece in board.ChessPieces)
+            foreach (var piece in board.ChessPieceClasses)
             {
                 if (!imagesDic.TryGetValue(piece, out Image img)) continue;
                 int x = piece.Position.X;
@@ -153,7 +153,7 @@ namespace ChessGui_WF
             }
         }
 
-        private string PieceToImagePath(ChessPiece piece)
+        private string PieceToImagePath(BoardEntityFactory piece)
         {
             string path = "";
             switch (piece.PieceClass)
@@ -190,7 +190,7 @@ namespace ChessGui_WF
             
 
             DrawBoard(e.Graphics);
-            DrawPieces(e.Graphics);
+            DrawPieceClasses(e.Graphics);
         }
 
         private void BoardUserControl_MouseDown(object sender, MouseEventArgs e)

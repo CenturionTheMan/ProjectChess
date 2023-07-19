@@ -57,7 +57,7 @@ namespace ChessTests
 
         private int TestDepth(int depth)
         {
-            ChessBoard board = new ChessBoard("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w");
+            GameManager board = new GameManager("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w");
 
             int movesAmount = MoveGeneration(board, depth);
             return movesAmount;
@@ -73,7 +73,7 @@ namespace ChessTests
             enPassantCaptureAmount = 0;
         }
 
-        private int MoveGeneration(ChessBoard board, int depth)
+        private int MoveGeneration(GameManager board, int depth)
         {
             if (depth == 0)
             {
@@ -112,12 +112,12 @@ namespace ChessTests
             checksmatesAmount++;
         }
 
-        private void PieceCaptured(ChessPiece piece)
+        private void PieceCaptured(BoardEntityFactory piece)
         {
             capturesAmount++;
         }
 
-        private void PawnPromotion(ChessPiece piece)
+        private void PawnPromotion(BoardEntityFactory piece)
         {
             promotionsAmount++;
         }

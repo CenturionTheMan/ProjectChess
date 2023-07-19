@@ -8,16 +8,16 @@ namespace ChessLibrary.Engine
     {
         private const int MAX_MOVES_AMOUNT = 200;
 
-        private ChessBoard board;
+        private GameManager board;
 
         private List<Move> sudoValidMovesWhite, sudoValidMovesBlack;
         (Move, HashSet<Vec2>)? checkMoveWhite, checkMoveBlack;
-        private Dictionary<ChessPiece, HashSet<Vec2>> pinnedPiecesWhite, pinnedPiecesBlack;
+        private Dictionary<BoardEntityFactory, HashSet<Vec2>> pinnedPieceClassesWhite, pinnedPieceClassesBlack;
         private bool[,] attackZoneWhite;
         private bool[,] attackZoneBlack;
 
 
-        public MovesValidator(ChessBoard board)
+        public MovesValidator(GameManager board)
         {
             InitData();
             this.board = board;
@@ -29,10 +29,10 @@ namespace ChessLibrary.Engine
             sudoValidMovesBlack = new(MAX_MOVES_AMOUNT);
             checkMoveWhite = null;
             checkMoveBlack = null;
-            pinnedPiecesWhite = new();
-            pinnedPiecesBlack = new();
-            attackZoneWhite = new bool[ChessBoard.BOARD_SIZE, ChessBoard.BOARD_SIZE];
-            attackZoneBlack = new bool[ChessBoard.BOARD_SIZE, ChessBoard.BOARD_SIZE];
+            pinnedPieceClassesWhite = new();
+            pinnedPieceClassesBlack = new();
+            attackZoneWhite = new bool[GameManager.BOARD_SINGLE_ROW_SIZE, GameManager.BOARD_SINGLE_ROW_SIZE];
+            attackZoneBlack = new bool[GameManager.BOARD_SINGLE_ROW_SIZE, GameManager.BOARD_SINGLE_ROW_SIZE];
         }
 
         public (List<Move> validMovesWhite, List<Move> validMovesBlack) GetValidMoves()
@@ -54,7 +54,7 @@ namespace ChessLibrary.Engine
 
         private void FindSudoValidMoves()
         {
-            foreach (var piece in board.ChessPieces)
+            foreach (var piece in board.ChessPieceClasses)
             {
                 switch (piece.PieceClass)
                 {
@@ -85,14 +85,14 @@ namespace ChessLibrary.Engine
 
         private (List<Move> validMovesWhite, List<Move> validMovesBlack) FindValidMoves()
         {
-            var validWhiteMoves = HandleSide(sudoValidMovesWhite, checkMoveBlack, pinnedPiecesWhite, attackZoneBlack);
-            var validBlackMoves = HandleSide(sudoValidMovesBlack, checkMoveWhite, pinnedPiecesBlack, attackZoneWhite);
+            var validWhiteMoves = HandleSide(sudoValidMovesWhite, checkMoveBlack, pinnedPieceClassesWhite, attackZoneBlack);
+            var validBlackMoves = HandleSide(sudoValidMovesBlack, checkMoveWhite, pinnedPieceClassesBlack, attackZoneWhite);
 
             return (validWhiteMoves, validBlackMoves);
 
 
 
-            List<Move> HandleSide(List<Move> sudoValidMoves, (Move, HashSet<Vec2>)? checkMove, Dictionary<ChessPiece, HashSet<Vec2>> pinnedPieces, bool[,] enemyAttackZone)
+            List<Move> HandleSide(List<Move> sudoValidMoves, (Move, HashSet<Vec2>)? checkMove, Dictionary<BoardEntityFactory, HashSet<Vec2>> pinnedPieceClasses, bool[,] enemyAttackZone)
             {
                 List<Move> validMoves = new();
 
@@ -121,7 +121,7 @@ namespace ChessLibrary.Engine
                     {
                         var piece = board.GetCell(move.FromPos).GetPiece();
 
-                        if (pinnedPieces.TryGetValue(piece, out var validCords))//pin
+                        if (pinnedPieceClasses.TryGetValue(piece, out var validCords))//pin
                         {
                             if(validCords.Contains(move.ToPos))
                             {
@@ -198,7 +198,7 @@ namespace ChessLibrary.Engine
 
 
 
-        private void GetRookRawMoves(ChessPiece piece)
+        private void GetRookRawMoves(BoardEntityFactory piece)
         {
             CheckLongMoves(piece, 0, 1);
             CheckLongMoves(piece, 1, 0);
@@ -206,7 +206,7 @@ namespace ChessLibrary.Engine
             CheckLongMoves(piece, -1, 0);
         }
 
-        private void GetKnightRawMoves(ChessPiece piece)
+        private void GetKnightRawMoves(BoardEntityFactory piece)
         {
             for (int i = -2; i <= 2; i++)
             {
@@ -249,7 +249,7 @@ namespace ChessLibrary.Engine
             }
         }
 
-        private void GetBishopRawMoves(ChessPiece piece)
+        private void GetBishopRawMoves(BoardEntityFactory piece)
         {
             CheckLongMoves(piece, 1, 1);
             CheckLongMoves(piece, 1, -1);
@@ -257,7 +257,7 @@ namespace ChessLibrary.Engine
             CheckLongMoves(piece, -1, 1);
         }
 
-        private void GetPawnRawMoves(ChessPiece piece)
+        private void GetPawnRawMoves(BoardEntityFactory piece)
         {
             Vec2 forward = (piece.PieceColor == ChessColors.WHITE) ? Vec2.Up : Vec2.Down;
             int promotionHight = (piece.PieceColor == ChessColors.WHITE) ? 7 : 0;
@@ -286,7 +286,7 @@ namespace ChessLibrary.Engine
 
             //forward-right capture
             cell = board.GetCell(piece.Position + forward + Vec2.Right);
-            if (cell != null && cell.HasPiece(out ChessPiece rightPiece) == true && rightPiece.PieceColor != piece.PieceColor)
+            if (cell != null && cell.HasPiece(out BoardEntityFactory rightPiece) == true && rightPiece.PieceColor != piece.PieceColor)
             {
                 var move = new Move(piece.Position, cell.Position, piece, rightPiece);
                 move.IsPromotion = promotionHight == cell.Position.Y;
@@ -309,7 +309,7 @@ namespace ChessLibrary.Engine
 
             //forward-left capture
             cell = board.GetCell(piece.Position + forward + Vec2.Left);
-            if (cell != null && cell.HasPiece(out ChessPiece leftPiece) == true && leftPiece.PieceColor != piece.PieceColor)
+            if (cell != null && cell.HasPiece(out BoardEntityFactory leftPiece) == true && leftPiece.PieceColor != piece.PieceColor)
             {
                 var move = new Move(piece.Position, cell.Position, piece, leftPiece);
                 move.IsPromotion = promotionHight == cell.Position.Y;
@@ -356,7 +356,7 @@ namespace ChessLibrary.Engine
             }
         }
 
-        private void GetKingRawMoves(ChessPiece piece)
+        private void GetKingRawMoves(BoardEntityFactory piece)
         {
             for (int i = -1; i < 2; i++)
             {
@@ -376,7 +376,7 @@ namespace ChessLibrary.Engine
             var shortCastlingCell = (piece.PieceColor == ChessColors.WHITE) ? board.GetCell(7, 0) : board.GetCell(7, 7);
             var longCastlingCell = (piece.PieceColor == ChessColors.WHITE) ? board.GetCell(0, 0) : board.GetCell(0, 7);
 
-            if (shortCastlingCell.HasPiece(out ChessPiece rookS) && rookS.PieceClass == PieceClasses.ROOK)
+            if (shortCastlingCell.HasPiece(out BoardEntityFactory rookS) && rookS.PieceClass == PieceClasses.ROOK)
             {
                 if (!board.HasPieceMoved(rookS)) //can do short (no check checked)
                 {
@@ -389,7 +389,7 @@ namespace ChessLibrary.Engine
                 }
             }
 
-            if (longCastlingCell.HasPiece(out ChessPiece rookL) && rookL.PieceClass == PieceClasses.ROOK)
+            if (longCastlingCell.HasPiece(out BoardEntityFactory rookL) && rookL.PieceClass == PieceClasses.ROOK)
             {
                 if (!board.HasPieceMoved(rookL)) //can do long (no check checked)
                 {
@@ -403,7 +403,7 @@ namespace ChessLibrary.Engine
             }
         }
 
-        private void GetQueenRawMoves(ChessPiece piece)
+        private void GetQueenRawMoves(BoardEntityFactory piece)
         {
             for (int i = -1; i < 2; i++)
             {
@@ -417,12 +417,12 @@ namespace ChessLibrary.Engine
 
 
 
-        private void CheckLongMoves(ChessPiece piece, int xDir, int yDir, int length = ChessBoard.BOARD_SIZE - 1)
+        private void CheckLongMoves(BoardEntityFactory piece, int xDir, int yDir, int length = GameManager.BOARD_SINGLE_ROW_SIZE - 1)
         {
             HashSet<Vec2> posInRange = new();
 
             int enemiesAmount = 0;
-            ChessPiece firstEnemyFound = null;
+            BoardEntityFactory firstEnemyFound = null;
 
             for (int i = 1; i <= length; i++)
             {
@@ -461,8 +461,8 @@ namespace ChessLibrary.Engine
                     else if(occupying.PieceClass == PieceClasses.KING && enemiesAmount == 1) //pin
                     {
                         posInRange.Add(new Vec2(piece.Position));
-                        if (piece.PieceColor == ChessColors.WHITE) pinnedPiecesBlack.Add(firstEnemyFound, posInRange);
-                        else pinnedPiecesWhite.Add(firstEnemyFound, posInRange);
+                        if (piece.PieceColor == ChessColors.WHITE) pinnedPieceClassesBlack.Add(firstEnemyFound, posInRange);
+                        else pinnedPieceClassesWhite.Add(firstEnemyFound, posInRange);
 
                         break;
                     }

@@ -14,8 +14,8 @@ namespace ChessLibrary.Engine
         public readonly Vec2 FromPos;
         public readonly Vec2 ToPos;
         
-        public ChessPiece ToMovePiece;
-        public ChessPiece? OtherPiece = null;
+        public BoardEntityFactory ToMovePiece;
+        public BoardEntityFactory? OtherPiece = null;
 
         public Promotions promotion = Promotions.NONE;
         public bool IsPromotion = false;
@@ -32,7 +32,7 @@ namespace ChessLibrary.Engine
 
 
 
-        public Move(Vec2 from, Vec2 to, ChessPiece toMovePiece, ChessPiece? capturedPiece)
+        public Move(Vec2 from, Vec2 to, BoardEntityFactory toMovePiece, BoardEntityFactory? capturedPiece)
         {
             FromPos = new Vec2(from);
             ToPos = new Vec2(to);

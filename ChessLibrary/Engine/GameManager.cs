@@ -5,24 +5,11 @@ using System.Collections.Generic;
 
 namespace ChessLibrary.Engine
 {
-    public class ChessBoard
+    public class GameManager
     {
-        public Action<ChessPiece>? OnPieceCaptured;
-        public Action<ChessPiece>? OnPawnPromotion;
-        public Action<ChessPiece>? OnPawnPromotionReversed;
-        public Action? OnCheck;
-        public Action? OnCheckMate;
-        public Action? OnEnPassantCapture;
-        public Action? OnCastle;
-        public Action<ChessBoard>? OnMoveMade;
-        public Action<ChessBoard>? OnLastMoveUnMade;
-
-        public const int BOARD_SIZE = 8;
-
-
         public ChessColors CurrentSide { get; private set; }
 
-        public List<ChessPiece> ChessPieces { get; private set; }
+        public List<BoardEntityFactory> ChessPieceClasses { get; private set; }
 
         public List<Move> PlayedMoves { get; private set; }
 
@@ -30,44 +17,28 @@ namespace ChessLibrary.Engine
 
         private MovesValidator movesValidator;
 
-        private BoardCell[,] boardCells;
+        private Board board;
 
-        private Dictionary<ChessPiece, Move> movedPieces;
-
-        private List<Move>? validMovesWhite = null, validMovesBlack = null;
-
-        private int fiftyMovesRule = 0;
+        //private int fiftyMovesRule = 0;
 
         #region CTOR
 
-        public ChessBoard(string fen) : this()
+        public GameManager(string fen) : this()
         {
-            bool success = FenInterpreter.GetSetupFromFen(fen, out ChessColors? currentSide, out List<ChessPiece> chessPieces);
+            bool success = FenInterpreter.GetSetupFromFen(fen, out ChessColors? currentSide, out List<BoardEntityFactory> chessPieceClasses);
             CurrentSide = currentSide.Value;
-            PlacePiecesAfterInit(chessPieces);
+            PlacePieceClassesAfterInit(chessPieceClasses);
         }
 
-        public ChessBoard(ChessColors currentSide, params ChessPiece[] chessPieces) : this()
+        public GameManager()
         {
-            CurrentSide = currentSide;
-            PlacePiecesAfterInit(new(chessPieces));
-        }
-
-        public ChessBoard(ChessColors currentSide, List<ChessPiece> chessPieces) : this()
-        {
-            CurrentSide = currentSide;
-            PlacePiecesAfterInit(chessPieces);
-        }
-
-        public ChessBoard()
-        {
-            ChessPieces = new List<ChessPiece>();
+            ChessPieceClasses = new List<BoardEntityFactory>();
             PlayedMoves = new();
             movesValidator = new(this);
-            movedPieces = new();
+            movedPieceClasses = new();
             CurrentGameResult = GameResult.NONE;
 
-            boardCells = new BoardCell[BOARD_SIZE, BOARD_SIZE];
+            boardCells = new BoardCell[BOARD_SINGLE_ROW_SIZE, BOARD_SINGLE_ROW_SIZE];
             for (int i = 0; i < 8; i++)
             {
                 for (int j = 0; j < 8; j++)
@@ -81,9 +52,9 @@ namespace ChessLibrary.Engine
 
         #region INIT
 
-        private void PlacePiecesAfterInit(List<ChessPiece> pieces)
+        private void PlacePieceClassesAfterInit(List<BoardEntityFactory> PieceClasses)
         {
-            foreach (var piece in pieces)
+            foreach (var piece in PieceClasses)
             {
                 PlacePieceAtPostion(piece, piece.Position);
             }
@@ -93,14 +64,14 @@ namespace ChessLibrary.Engine
 
         #region GETTERS/SETTERS
 
-        public bool HasPieceMoved(ChessPiece piece)
+        public bool HasPieceMoved(BoardEntityFactory piece)
         {
-            return movedPieces.ContainsKey(piece);
+            return movedPieceClasses.ContainsKey(piece);
         }
 
-        public bool HasPieceMoved(ChessPiece piece, out Move move)
+        public bool HasPieceMoved(BoardEntityFactory piece, out Move move)
         {
-            bool res = movedPieces.TryGetValue(piece, out move);
+            bool res = movedPieceClasses.TryGetValue(piece, out move);
             return res;
         }
 
@@ -151,12 +122,12 @@ namespace ChessLibrary.Engine
             CurrentSide = CurrentSide == ChessColors.WHITE ? ChessColors.BLACK : ChessColors.WHITE;
         }
 
-        private void PlacePieceAtPostion(ChessPiece piece, Vec2 position)
+        private void PlacePieceAtPostion(BoardEntityFactory piece, Vec2 position)
         {
             PlacePieceAtPostion(piece, position.X, position.Y);
         }
 
-        private void PlacePieceAtPostion(ChessPiece piece, int x, int y)
+        private void PlacePieceAtPostion(BoardEntityFactory piece, int x, int y)
         {
             if (!CheckIfCordsAreValid(x, y)) return;
 
@@ -166,7 +137,7 @@ namespace ChessLibrary.Engine
             //}
             boardCells[x, y].SetPiece(piece);
             piece.SetPosition(x, y);
-            ChessPieces.Add(piece);
+            ChessPieceClasses.Add(piece);
             return;
         }
 
@@ -178,7 +149,7 @@ namespace ChessLibrary.Engine
             if (removedPiece == null) return false;
 
             //removedPiece.SetPosition(-1, -1);
-            _ = ChessPieces.Remove(removedPiece);
+            _ = ChessPieceClasses.Remove(removedPiece);
 
             return true;
         }
@@ -257,7 +228,7 @@ namespace ChessLibrary.Engine
             fiftyMovesRule++;
 
             var fromCell = GetCell(move.FromPos);
-            _ = fromCell.HasPiece(out ChessPiece pieceToMove);
+            _ = fromCell.HasPiece(out BoardEntityFactory pieceToMove);
 
             if (pieceToMove.PieceClass == PieceClasses.PAWN)
             {
@@ -308,7 +279,7 @@ namespace ChessLibrary.Engine
             PlacePieceAtPostion(pieceToMove, move.ToPos);
             move.OrderInPlayedMoves = PlayedMoves.Count;
             PlayedMoves.Add(move);
-            _ = movedPieces.TryAdd(pieceToMove, move);
+            _ = movedPieceClasses.TryAdd(pieceToMove, move);
 
 
             (this.validMovesWhite, this.validMovesBlack) = movesValidator.GetValidMoves();
@@ -372,11 +343,11 @@ namespace ChessLibrary.Engine
             }
 
             PlayedMoves.Remove(lastMove);
-            if(movedPieces.TryGetValue(lastMove.ToMovePiece,out Move move))
+            if(movedPieceClasses.TryGetValue(lastMove.ToMovePiece,out Move move))
             {
                 if(move == lastMove)
                 {
-                    movedPieces.Remove(lastMove.ToMovePiece);
+                    movedPieceClasses.Remove(lastMove.ToMovePiece);
                 }
             }
 
@@ -393,24 +364,24 @@ namespace ChessLibrary.Engine
 
         private void CheckDrawInsufficientMaterial()
         {
-            if (ChessPieces.Count <= 4) //Insufficient material
+            if (ChessPieceClasses.Count <= 4) //Insufficient material
             {
-                if (ChessPieces.Count == 2)
+                if (ChessPieceClasses.Count == 2)
                 {
                     CurrentGameResult = GameResult.DRAW;//Two kings
                 }
-                else if (ChessPieces.Count == 3) // Two kings and bishop or knight
+                else if (ChessPieceClasses.Count == 3) // Two kings and bishop or knight
                 {
-                    ChessPiece? other = ChessPieces.Find(p => p.PieceClass != PieceClasses.KING);
+                    BoardEntityFactory? other = ChessPieceClasses.Find(p => p.PieceClass != PieceClasses.KING);
                     if (other == null) throw new Exception();
                     if (other.PieceClass == PieceClasses.BISHOP || other.PieceClass == PieceClasses.KNIGHT) CurrentGameResult = GameResult.DRAW;
                 }
                 else //Two king and two bishops
                 {
-                    var pieces = ChessPieces.FindAll(p => p.PieceClass == PieceClasses.BISHOP);
-                    if (pieces.Count == 2 && pieces[0].PieceColor != pieces[1].PieceColor)
+                    var PieceClasses = ChessPieceClasses.FindAll(p => p.PieceClass == PieceClasses.BISHOP);
+                    if (PieceClasses.Count == 2 && PieceClasses[0].PieceColor != PieceClasses[1].PieceColor)
                     {
-                        foreach (var bishop in pieces)
+                        foreach (var bishop in PieceClasses)
                         {
                             if ((bishop.Position.X + bishop.Position.Y) % 2 == 1 && bishop.PieceColor == ChessColors.WHITE)
                             {

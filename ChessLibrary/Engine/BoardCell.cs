@@ -8,26 +8,26 @@ namespace ChessLibrary.Engine
     {
         public readonly Vec2 Position;
 
-        private ChessPiece? piece;
+        private BoardEntityFactory? piece;
 
-        public BoardCell(Vec2 position, ChessPiece? piece = null)
+        public BoardCell(Vec2 position, BoardEntityFactory? piece = null)
         {
             this.Position = position;
             this.piece = piece;
         }
 
-        public BoardCell(int x, int y, ChessPiece? piece = null)
+        public BoardCell(int x, int y, BoardEntityFactory? piece = null)
         {
             this.Position = new Vec2(x, y);
             this.piece = piece;
         }
 
-        public ChessPiece? GetPiece()
+        public BoardEntityFactory? GetPiece()
         {
             return piece;
         }
 
-        public bool HasPiece(out ChessPiece piece)
+        public bool HasPiece(out BoardEntityFactory piece)
         {
             piece = this.piece;
             return this.piece != null;
@@ -38,14 +38,14 @@ namespace ChessLibrary.Engine
             return piece != null;
         }
 
-        public void SetPiece(ChessPiece piece)
+        public void SetPiece(BoardEntityFactory piece)
         {
             this.piece = piece;
         }
 
-        public ChessPiece? RemovePiece()
+        public BoardEntityFactory? RemovePiece()
         {
-            ChessPiece? tmp = piece;
+            BoardEntityFactory? tmp = piece;
             piece = null;
             return tmp;
         }

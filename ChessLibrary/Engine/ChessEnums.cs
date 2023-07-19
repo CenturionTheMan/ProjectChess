@@ -3,30 +3,34 @@ using System.Collections.Generic;
 
 namespace ChessLibrary.Engine
 {
-    public enum PieceClasses
+    [Flags]
+    public enum PieceClasses : uint
     {
-        KING,
-        QUEEN,
-        ROOK,
-        BISHOP,
-        PAWN,
-        KNIGHT
+        KING =      0b00000000_00000000_00000000_0000_0001,
+        QUEEN =     0b00000000_00000000_00000000_0000_0010,
+        ROOK =      0b00000000_00000000_00000000_0000_0100,
+        BISHOP =    0b00000000_00000000_00000000_0000_1000,
+        PAWN =      0b00000000_00000000_00000000_0001_0000,
+        KNIGHT =    0b00000000_00000000_00000000_0010_0000,
+        NONE =      0,
     }
 
-    public enum ChessColors
+    [Flags]
+    public enum ChessColors : uint
     {
-        BLACK,
-        WHITE,
+        BLACK = 0b0100_0000_00000000_00000000_00000000,
+        WHITE = 0b1000_0000_00000000_00000000_00000000,
+        NONE = 0,
     }
 
-    public enum Promotions
-    {
-        TO_QUEEN,
-        TO_KNIGHT,
-        TO_ROOK,
-        TO_BISHOP,
-        NONE
-    }
+    //public enum Promotions
+    //{
+    //    TO_QUEEN,
+    //    TO_KNIGHT,
+    //    TO_ROOK,
+    //    TO_BISHOP,
+    //    NONE
+    //}
 
     public enum GameResult
     {

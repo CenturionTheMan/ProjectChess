@@ -5,14 +5,14 @@ namespace ChessLibrary.Engine
 {
     public static class FenInterpreter
     {
-        public static bool GetSetupFromFen(string fen, out ChessColors? currentSide, out List<ChessPiece>? pieces)
+        public static bool GetSetupFromFen(string fen, out ChessColors? currentSide, out List<BoardEntityFactory>? PieceClasses)
         {
-            pieces = null;
+            PieceClasses = null;
             currentSide = null;
             try
             {
                 var toHandle = fen.Split(" ");
-                pieces = new List<ChessPiece>();
+                PieceClasses = new List<BoardEntityFactory>();
                 currentSide = toHandle[1] == "w" ? ChessColors.WHITE : ChessColors.BLACK;
 
                 int currentY = 7;
@@ -35,7 +35,7 @@ namespace ChessLibrary.Engine
 
                     var piece = CharToPiece(c);
                     piece.SetPosition(currentX, currentY);
-                    pieces.Add(piece);
+                    PieceClasses.Add(piece);
                     currentX++;
                 }
                 return true;
@@ -47,51 +47,51 @@ namespace ChessLibrary.Engine
             }
         }
 
-        private static ChessPiece CharToPiece(char c)
+        private static BoardEntityFactory CharToPiece(char c)
         {
-            ChessPiece tmp = null;
+            BoardEntityFactory tmp = null;
             switch (c)
             {
                 case 'r':
-                    tmp = new ChessPiece(PieceClasses.ROOK, ChessColors.BLACK, -1, -1);
+                    tmp = new BoardEntityFactory(PieceClasses.ROOK, ChessColors.BLACK, -1, -1);
                     break;
                 case 'R':
-                    tmp = new ChessPiece(PieceClasses.ROOK, ChessColors.WHITE, -1, -1);
+                    tmp = new BoardEntityFactory(PieceClasses.ROOK, ChessColors.WHITE, -1, -1);
                     break;
 
                 case 'n':
-                    tmp = new ChessPiece(PieceClasses.KNIGHT, ChessColors.BLACK, -1, -1);
+                    tmp = new BoardEntityFactory(PieceClasses.KNIGHT, ChessColors.BLACK, -1, -1);
                     break;
                 case 'N':
-                    tmp = new ChessPiece(PieceClasses.KNIGHT, ChessColors.WHITE, -1, -1);
+                    tmp = new BoardEntityFactory(PieceClasses.KNIGHT, ChessColors.WHITE, -1, -1);
                     break;
 
                 case 'b':
-                    tmp = new ChessPiece(PieceClasses.BISHOP, ChessColors.BLACK, -1, -1);
+                    tmp = new BoardEntityFactory(PieceClasses.BISHOP, ChessColors.BLACK, -1, -1);
                     break;
                 case 'B':
-                    tmp = new ChessPiece(PieceClasses.BISHOP, ChessColors.WHITE, -1, -1);
+                    tmp = new BoardEntityFactory(PieceClasses.BISHOP, ChessColors.WHITE, -1, -1);
                     break;
 
                 case 'q':
-                    tmp = new ChessPiece(PieceClasses.QUEEN, ChessColors.BLACK, -1, -1);
+                    tmp = new BoardEntityFactory(PieceClasses.QUEEN, ChessColors.BLACK, -1, -1);
                     break;
                 case 'Q':
-                    tmp = new ChessPiece(PieceClasses.QUEEN, ChessColors.WHITE, -1, -1);
+                    tmp = new BoardEntityFactory(PieceClasses.QUEEN, ChessColors.WHITE, -1, -1);
                     break;
 
                 case 'k':
-                    tmp = new ChessPiece(PieceClasses.KING, ChessColors.BLACK, -1, -1);
+                    tmp = new BoardEntityFactory(PieceClasses.KING, ChessColors.BLACK, -1, -1);
                     break;
                 case 'K':
-                    tmp = new ChessPiece(PieceClasses.KING, ChessColors.WHITE, -1, -1);
+                    tmp = new BoardEntityFactory(PieceClasses.KING, ChessColors.WHITE, -1, -1);
                     break;
 
                 case 'p':
-                    tmp = new ChessPiece(PieceClasses.PAWN, ChessColors.BLACK, -1, -1);
+                    tmp = new BoardEntityFactory(PieceClasses.PAWN, ChessColors.BLACK, -1, -1);
                     break;
                 case 'P':
-                    tmp = new ChessPiece(PieceClasses.PAWN, ChessColors.WHITE, -1, -1);
+                    tmp = new BoardEntityFactory(PieceClasses.PAWN, ChessColors.WHITE, -1, -1);
                     break;
 
                 default:

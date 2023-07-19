@@ -11,9 +11,9 @@ namespace ChessGui_WF
 
         private void startButton_Click(object sender, EventArgs e)
         {
-            if (!FenInterpreter.GetSetupFromFen(initPosTextBox.Text, out var currentSide, out var pieces)) return;
+            if (!FenInterpreter.GetSetupFromFen(initPosTextBox.Text, out var currentSide, out var PieceClasses)) return;
 
-            ChessBoard board = new ChessBoard(currentSide.Value, pieces);
+            GameManager board = new GameManager(currentSide.Value, PieceClasses);
             boardUserControl.InitGame(board);
         }
 
