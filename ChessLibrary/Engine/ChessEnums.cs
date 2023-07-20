@@ -32,6 +32,18 @@ namespace ChessLibrary.Engine
     //    NONE
     //}
 
+    public enum Directions
+    {
+        UP = 8,
+        RIGHT = 1,
+        DOWN = -8,
+        LEFT = -1,
+        UP_RIGHT = 9,
+        UP_LEFT = 7,
+        DOWN_RIGHT = -7,
+        DOWN_LEFT = -9,
+    }
+
     public enum GameResult
     {
         NONE,

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -15,6 +16,8 @@ namespace ChessLibrary.Engine
         public const int BOARD_SIZE = 64;
 
         private uint[] boardCells;
+        private List<int> piecePositions;
+
 
         /// <summary>
         /// Initializes a new instance of the Board class.
@@ -22,6 +25,12 @@ namespace ChessLibrary.Engine
         public Board()
         {
             boardCells = new uint[BOARD_SIZE];
+            piecePositions = new();
+        }
+
+        public List<int> GetPiecePositions()
+        {
+            return piecePositions;
         }
 
         /// <summary>
@@ -34,6 +43,7 @@ namespace ChessLibrary.Engine
         {
             var piece = BoardEntityFactory.CreatePiece(pieceClass, pieceColor);
             boardCells[piecePos] = piece;
+            piecePositions.Add(piecePos);
         }
 
         /// <summary>
@@ -43,6 +53,11 @@ namespace ChessLibrary.Engine
         /// <returns>True if the cell contains a piece, otherwise false.</returns>
         public bool CheckIfCellHavePiece(int pos)
         {
+            if (pos >= Board.BOARD_SIZE || pos < 0)
+            {
+                return false;
+            }
+
             return BoardEntityFactory.CheckIfPiece(boardCells[pos]);
         }
 
@@ -55,6 +70,12 @@ namespace ChessLibrary.Engine
         /// <returns>True if the cell contains a piece, otherwise false.</returns>
         public bool CheckIfCellHavePiece(int pos, out PieceClasses pieceClass, out ChessColors chessColors)
         {
+            if (pos >= Board.BOARD_SIZE || pos < 0)
+            {
+                pieceClass = PieceClasses.NONE;
+                chessColors = ChessColors.NONE;
+                return false;
+            }
             return BoardEntityFactory.CheckIfPiece(boardCells[pos], out pieceClass, out chessColors);
         }
 
@@ -66,6 +87,8 @@ namespace ChessLibrary.Engine
         public void PlaceEntity(uint code, int pos)
         {
             boardCells[pos] = code;
+            if(BoardEntityFactory.CheckIfPiece(code))
+                piecePositions.Add(pos);
         }
 
         /// <summary>
@@ -74,6 +97,7 @@ namespace ChessLibrary.Engine
         /// <param name="piecePos">The position on the board to remove the piece from.</param>
         public void RemovePiece(int piecePos)
         {
+            piecePositions.Remove(piecePos);
             boardCells[piecePos] = BoardEntityFactory.CreateEmpty();
         }
 
@@ -85,6 +109,22 @@ namespace ChessLibrary.Engine
         public uint GetCellCode(int pos)
         {
             return boardCells[pos];
+        }
+
+        public bool CheckIfCellHavePieceWithGivenColor(int pos, bool isWhite)
+        {
+            ChessColors color = (isWhite) ? ChessColors.WHITE : ChessColors.BLACK;
+            return BoardEntityFactory.CheckIfPieceWithGivenColor(GetCellCode(pos), color);
+        }
+
+        public bool CheckIfCellHavePieceWithGivenColor(int pos, ChessColors color)
+        {
+            return BoardEntityFactory.CheckIfPieceWithGivenColor(GetCellCode(pos), color);
+        }
+
+        public bool CheckIfCellHavePieceOfGivenClass(int pos, PieceClasses pClass)
+        {
+            return pClass == BoardEntityFactory.GetPieceClass(GetCellCode(pos));
         }
 
         /// <summary>

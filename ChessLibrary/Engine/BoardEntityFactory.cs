@@ -82,6 +82,13 @@ namespace ChessLibrary.Engine
             return true;
         }
 
+
+        public static PieceClasses GetPieceClass(uint pieceCode)
+        {
+            var onlyPieceClassCode = pieceCode & PIECE_MASK;
+            return (PieceClasses)onlyPieceClassCode;
+        }
+
         /// <summary>
         /// Creates an empty piece code.
         /// </summary>

@@ -30,7 +30,7 @@ namespace ChessLibrary.Engine
         }
 
 
-        public Move AddAffectedPiece(int affectedFromPos, int affectedToPos)
+        public Move AddAffectedPiece(int affectedFromPos, int? affectedToPos)
         {
             this.AffectedToPos = affectedToPos;
             this.AffectedFromPos = affectedFromPos;

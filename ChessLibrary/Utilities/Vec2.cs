@@ -42,7 +42,11 @@ namespace ChessLibrary.Utilities
         {
 
         }
-
+        
+        public int ToBoardPosition()
+        {
+            return x + y * 8;
+        }
 
         public bool Equals(int x, int y)
         {

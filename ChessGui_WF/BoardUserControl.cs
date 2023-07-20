@@ -54,8 +54,8 @@ namespace ChessGui_WF
         public void InitGame(Game game)
         {
             this.game = game;
-
-            foreach (var piecePos in game.GetPiecePositions())
+            var piecePositions = game.GetPiecePositions();
+            foreach (var piecePos in piecePositions)
             {
                 _ = game.TryGetPieceAtPosition(piecePos, out PieceClasses pieceClass, out ChessColors color);
                 string imagePath = IMAGES_FOLDER_PATH + PieceToImagePath(pieceClass, color);
@@ -109,9 +109,13 @@ namespace ChessGui_WF
             Brush move = new SolidBrush(MOVE_COLOR);
             Brush clickedBrush = new SolidBrush(CLICKED_COLOR);
 
-            //List<Move> validMoves = null;
-            //if (clickedMousePosFrom != null)
-            //    validMoves = board.GetListOfValidMovesForCurrentSide().FindAll(m => m.FromPos == clickedMousePosFrom);
+            Move[] validMoves = null;
+            if (clickedMousePosFrom != null)
+            {
+                int singleDimPos = clickedMousePosFrom.ToBoardPosition();
+                validMoves = game.GetValidMoves();
+                validMoves = Array.FindAll(validMoves, m => m.FromPos == singleDimPos);
+            }
 
 
 
@@ -121,14 +125,14 @@ namespace ChessGui_WF
                 {
                     Brush brush = ((x+y)%2==0)? blackBrush : whiteBrush;
 
-                    //if (validMoves != null && validMoves.Exists(m => m.GetTriggerPos().Equals(x, y)))
-                    //{
-                    //    brush = move;
-                    //}
-                    //else if (clickedMousePosFrom != null && clickedMousePosFrom.Equals(x, y))
-                    //{
-                    //    brush = clickedBrush;
-                    //}
+                    if (validMoves != null && Array.Exists(validMoves, m => m.ToPos == x + 8*y))
+                    {
+                        brush = move;
+                    }
+                    else if (clickedMousePosFrom != null && clickedMousePosFrom.Equals(x, y))
+                    {
+                        brush = clickedBrush;
+                    }
 
                     int xWindowPos = windowOffset.X + x * cellSize.X;
                     int yWindowPos = windowSize.Y - windowOffset.Y - (y + 1) * cellSize.Y;
@@ -225,17 +229,17 @@ namespace ChessGui_WF
 
         private void TryMakeMove(Vec2 pos)
         {
-            //var moves = board.GetListOfValidMovesForCurrentSide();
-            //var move = moves.Find(m => m.FromPos == clickedMousePosFrom && m.GetTriggerPos() == pos);
-            //if (move != null)
-            //{
-            //    board.MakeMove(move);
-            //    clickedMousePosFrom = null;
-            //}
-            //else
-            //{
-            //    clickedMousePosFrom = pos;
-            //}
+            var moves = game.GetValidMoves();
+            var move = Array.Find(moves, m => m.FromPos == clickedMousePosFrom.ToBoardPosition() && m.ToPos == pos.ToBoardPosition());
+            if (move != null)
+            {
+                game.MakeMove(move);
+                clickedMousePosFrom = null;
+            }
+            else
+            {
+                clickedMousePosFrom = pos;
+            }
         }
 
         private void BoardUserControl_MouseUp(object sender, MouseEventArgs e)
