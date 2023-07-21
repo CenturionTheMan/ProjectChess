@@ -18,7 +18,7 @@ namespace ChessGui_WF
         private readonly Color BLACK_CELL_COLOR = Color.RosyBrown;
         private readonly Color WHITE_CELL_COLOR = Color.AntiqueWhite;
         private readonly Color BORDER_COLOR = Color.SaddleBrown;
-        private readonly Color MOVE_COLOR = Color.GreenYellow;
+        private readonly Color MOVE_COLOR = Color.Gray;
         private readonly Color CLICKED_COLOR = Color.DarkSeaGreen;
 
         private readonly float BOARD_OFFSET_PERC = 0.01f;
@@ -69,9 +69,8 @@ namespace ChessGui_WF
 
         public void UnmakeLastMove()
         {
-            return;
-            //if (board == null) return;
-            //board.UnMakeLastMove();
+            if (game == null) return;
+            game.UnMakeLastMove();
             this.Invalidate();
         }
 
@@ -108,6 +107,7 @@ namespace ChessGui_WF
             Brush blackBrush = new SolidBrush(BLACK_CELL_COLOR);
             Brush move = new SolidBrush(MOVE_COLOR);
             Brush clickedBrush = new SolidBrush(CLICKED_COLOR);
+            Brush attackZoneBrush = new SolidBrush(Color.Red);
 
             Move[] validMoves = null;
             if (clickedMousePosFrom != null)
@@ -118,18 +118,14 @@ namespace ChessGui_WF
             }
 
 
-
             for (int y = 0; y < Board.BOARD_SINGLE_ROW_SIZE; y++)
             {
                 for (int x = 0; x < Board.BOARD_SINGLE_ROW_SIZE; x++)
                 {
                     Brush brush = ((x+y)%2==0)? blackBrush : whiteBrush;
 
-                    if (validMoves != null && Array.Exists(validMoves, m => m.ToPos == x + 8*y))
-                    {
-                        brush = move;
-                    }
-                    else if (clickedMousePosFrom != null && clickedMousePosFrom.Equals(x, y))
+                    
+                    if (clickedMousePosFrom != null && clickedMousePosFrom.Equals(x, y))
                     {
                         brush = clickedBrush;
                     }
@@ -139,11 +135,21 @@ namespace ChessGui_WF
 
                     g.FillRectangle(brush, xWindowPos, yWindowPos, cellSize.X,cellSize.Y);
                     cellsPositions[x , y] = new Vec2(xWindowPos, yWindowPos);
+
+                    //if (game != null && game.GetEnemyAttackZone()[x + 8 * y])
+                    //{
+                    //    g.FillEllipse(attackZoneBrush, xWindowPos + cellSize.X / 4, yWindowPos + cellSize.Y / 4, cellSize.X/2, cellSize.Y/2);
+                    //}
+                    if (validMoves != null && Array.Exists(validMoves, m => m.ToPos == x + 8 * y))
+                    {
+                        g.FillEllipse(move, xWindowPos + cellSize.X / 4, yWindowPos + cellSize.Y / 4, cellSize.X / 2, cellSize.Y / 2);
+                    }
                 }
             }
 
             this.BackColor = BORDER_COLOR;
         }
+
 
         private void DrawPieceClasses(Graphics g)
         {

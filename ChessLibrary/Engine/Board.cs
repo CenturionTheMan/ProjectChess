@@ -111,6 +111,11 @@ namespace ChessLibrary.Engine
             return boardCells[pos];
         }
 
+        public bool IsPositionInsideBoard(int position)
+        {
+            return position >= 0 && position < Board.BOARD_SIZE;
+        }
+
         public bool CheckIfCellHavePieceWithGivenColor(int pos, bool isWhite)
         {
             ChessColors color = (isWhite) ? ChessColors.WHITE : ChessColors.BLACK;

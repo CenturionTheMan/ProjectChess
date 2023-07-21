@@ -17,11 +17,13 @@ namespace ChessLibrary.Engine
         //public readonly uint ToMovePiece;
 
 
-        public int? AffectedFromPos = null;
-        public int? AffectedToPos = null;
+        private int? affectedFromPos = null;
+        private int? affectedToPos = null;
+        private uint affectedPiece = BoardEntityFactory.CreateEmpty();
 
+        private int enPassantPosition = -1;
 
-
+        private int[] castlingArrayIndex = new int[0];
 
         public Move(int from, int to)
         {
@@ -30,11 +32,46 @@ namespace ChessLibrary.Engine
         }
 
 
-        public Move AddAffectedPiece(int affectedFromPos, int? affectedToPos)
+        public Move AddAffectedPiece(int affectedFromPos, int? affectedToPos, uint affectedPiece)
         {
-            this.AffectedToPos = affectedToPos;
-            this.AffectedFromPos = affectedFromPos;
+            this.affectedToPos = affectedToPos;
+            this.affectedFromPos = affectedFromPos;
+            this.affectedPiece = affectedPiece;
             return this;
+        }
+
+        public Move AddEnPassantPosition(int enPassantPosition)
+        {
+            this.enPassantPosition = enPassantPosition;
+            return this;
+        }
+
+        public Move AddCastlingFlag(params int[] castlingArrayIndex)
+        {
+            this.castlingArrayIndex = castlingArrayIndex;
+            return this;
+        }
+
+        public int[] GetCastlingArrayIndex()
+        {
+            return this.castlingArrayIndex;
+        }
+
+        public int GetEnPassantPosition()
+        {
+            return this.enPassantPosition;
+        }
+
+        public bool TryGetAffectedPiecePos(out int? affectedFromPos,out int? affectedToPos)
+        {
+            affectedFromPos = this.affectedFromPos;
+            affectedToPos = this.affectedToPos;
+            return this.affectedFromPos != null;
+        }
+
+        public uint GetAffectedPiece()
+        {
+            return affectedPiece;
         }
     }
 }

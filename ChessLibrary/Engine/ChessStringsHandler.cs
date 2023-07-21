@@ -70,8 +70,23 @@ namespace ChessLibrary.Engine
                     enPassantPosition = x + y * 8;
                 }
 
-                halfmoves = int.Parse(toHandle[4]);
-                fullmove = int.Parse(toHandle[5]);
+                if (toHandle.Length < 5 || toHandle[4] == String.Empty)
+                {
+                    halfmoves = 0;
+                    fullmove = 0;
+                }
+                else
+                {
+                    if(!int.TryParse(toHandle[4], out halfmoves))
+                    {
+                        halfmoves = 0;
+                    }
+                    if (!int.TryParse(toHandle[5], out fullmove))
+                    {
+                        fullmove = 0;
+                    }
+
+                }
 
                 return true;
             }

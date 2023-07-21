@@ -11,8 +11,11 @@ namespace ChessLibrary.Engine
     {
         private static int[,] slidingEndCells;
         private static int[][] knightsValidCells;
+        private static (int low, int high) whitePawnsOriginCells = (7, 16);
+        private static (int low, int high) blackPawnsOriginCells = (47, 56);
 
-        private static readonly Vec2[] knightOffsets = { new Vec2(1,2), new Vec2(1, -2), new Vec2(-1, 2), new Vec2(-1, -2), new Vec2(2, 1), new Vec2(2, -1), new Vec2(-2, 1), new Vec2(-2, -1) };
+
+        //private static readonly Vec2[] knightOffsets = { new Vec2(1,2), new Vec2(2,1), new Vec2(2,-1), new Vec2(1,-2), new Vec2(-1,-2), new Vec2(-2,-1), new Vec2(-2,1), new Vec2(-1,2) };
 
 
         static BoardMovementRestrainer()
@@ -39,21 +42,33 @@ namespace ChessLibrary.Engine
             }
 
 
+            //KINGHTS
             knightsValidCells = new int[Board.BOARD_SIZE][];
             for (int position = 0; position < Board.BOARD_SIZE; position++)
             {
-                List<int> tmp = new();
-                foreach (var knightOffset in knightOffsets)
+                if (position == 18)
                 {
-                    Vec2 origin = SingleDimPosToVec2(position);
-                    Vec2 offset = knightOffset;
-                    Vec2 pos = origin + offset;
-                    if (pos.X < 0 || pos.X >= Board.BOARD_SINGLE_ROW_SIZE || pos.Y < 0 || pos.Y >= Board.BOARD_SINGLE_ROW_SIZE) continue;
-
-                    tmp.Add(pos.ToBoardPosition());
+                    Console.WriteLine("???");
                 }
 
-             
+                List<int> tmp = new();
+                for (int i = -2; i <= 2; i++)
+                {
+                    for (int j = -2; j <= 2; j++)
+                    {
+                        if (i == j || i == -j) continue;
+                        if (i == 0 || j == 0) continue;
+                        Vec2 pos = SingleDimPosToVec2(position);
+                        var offset = new Vec2(i, j);
+
+                        if (pos.X + offset.X >= 0 && pos.X + offset.X < Board.BOARD_SINGLE_ROW_SIZE && pos.Y + offset.Y >= 0 && pos.Y + offset.Y < Board.BOARD_SINGLE_ROW_SIZE)
+                        {
+                            var toAddVec = pos + offset;
+                            int singleDimPos = toAddVec.ToBoardPosition();
+                            tmp.Add(singleDimPos);
+                        }
+                    }
+                }
                 knightsValidCells[position] = tmp.ToArray();
             }
         }
@@ -83,12 +98,12 @@ namespace ChessLibrary.Engine
             }
         }
 
-        public static void ForceCTOR() { }
+        public static void ForceCTOR() { GetSlidingEndCellPosition(0, Directions.UP); GetKnightsValidMoveCells(0); }
 
         private static Vec2 SingleDimPosToVec2(int pos)
         {
-            //int posY = (int)((uint)pos >> 3);
-            int posY = pos/8;
+            int posY = (int)((uint)pos >> 3);
+            //int posY = pos/8;
             int posX = pos - posY * 8;
             return new Vec2(posX, posY);
         }
@@ -101,6 +116,16 @@ namespace ChessLibrary.Engine
         public static int[] GetKnightsValidMoveCells(int position)
         {
             return knightsValidCells[position];
+        }
+
+        public static bool IsPositionBeginWhitePawnPosition(int position)
+        {
+            return position > whitePawnsOriginCells.low && position < whitePawnsOriginCells.high;
+        }
+
+        public static bool IsPositionBeginBlackPawnPosition(int position)
+        {
+            return position > blackPawnsOriginCells.low && position < blackPawnsOriginCells.high;
         }
     }
 }

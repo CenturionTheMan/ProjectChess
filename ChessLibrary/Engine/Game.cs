@@ -7,11 +7,10 @@ namespace ChessLibrary.Engine
 {
     public class Game
     {
-        public List<Move> PlayedMoves { get; private set; }
+        public Stack<Move> PlayedMoves { get; private set; }
 
-
-        private int movesCount = 0;
-
+        int halfmoves, fullmoves;
+        
         private MovesValidator movesValidator;
 
         private Board board;
@@ -19,20 +18,19 @@ namespace ChessLibrary.Engine
 
         private ChessColors currentSide;
 
-        //private int fiftyMovesRule = 0;
+        private int enPassantPosition = -1;
+
+        private bool[] castling;
+        private int castlingChanged = 0;
 
         #region CTOR
 
         public Game(string fen) : this()
         {
-            throw new NotImplementedException();
-            bool success = ChessStringsHandler.GetSetupFromFen(fen, out uint[] board, out ChessColors? currentSide, out bool[] castling, out int enPassantPosition, out int halfmoves, out int fullmove);
-        }
+            bool success = ChessStringsHandler.GetSetupFromFen(fen, out uint[] board, out ChessColors? currentSide, out castling, out enPassantPosition, out halfmoves, out fullmoves);
+            if (success == false) throw new Exception();
 
-        public Game(uint[] board, ChessColors? currentSide, bool[] castling, int enPassantPosition, int halfmoves, int fullmove) : this()
-        {
             this.currentSide = currentSide.Value;
-
 
             for (int i = 0; i < board.Length; i++)
             {
@@ -40,7 +38,25 @@ namespace ChessLibrary.Engine
             }
         }
 
-        public Game()
+
+        //castling[0] = toHandle[2].Contains("K");
+        //castling[1] = toHandle[2].Contains("Q");
+        //castling[2] = toHandle[2].Contains("k");
+        //castling[3] = toHandle[2].Contains("q");
+        public Game(uint[] board, ChessColors? currentSide, bool[] castling, int enPassantPosition, int halfmoves, int fullmoves) : this()
+        {
+            this.halfmoves = halfmoves;
+            this.fullmoves = fullmoves;
+            this.currentSide = currentSide.Value;
+            this.enPassantPosition = enPassantPosition;
+            this.castling = castling;
+            for (int i = 0; i < board.Length; i++)
+            {
+                this.board.PlaceEntity(board[i], i);
+            }
+        }
+
+        private Game()
         {
             board = new Board();
             PlayedMoves = new();
@@ -52,6 +68,20 @@ namespace ChessLibrary.Engine
 
 
         #region GETTERS/SETTERS
+
+        public bool[] GetCastling()
+        {
+            if (castlingChanged >= 4) return null;
+            return castling;
+        }
+
+        public bool[] GetEnemyAttackZone() { return movesValidator.GetEnemyAttackZone(); }
+
+        public bool IsEnPassantPosition(out int position)
+        {
+            position = enPassantPosition;
+            return position >= 0;
+        }
 
         public List<int> GetPiecePositions()
         {
@@ -137,19 +167,34 @@ namespace ChessLibrary.Engine
 
         public void MakeMove(Move move)
         {
-            if(move.AffectedToPos != null) //castling
+            if(move.TryGetAffectedPiecePos(out int? affectedFromPos, out int? affectedToPos))
             {
-
+                if (affectedToPos != null) //castling
+                {
+                    uint rook = board.GetCellCode(affectedFromPos.Value);
+                    board.RemovePiece(affectedFromPos.Value);
+                    board.PlaceEntity(rook, affectedToPos.Value);
+                }
+                else //capture
+                {
+                    board.RemovePiece(affectedFromPos.Value);
+                }
             }
-            else if(move.AffectedFromPos != null) //capture
+
+            foreach (var i in move.GetCastlingArrayIndex())
             {
-                board.RemovePiece(move.AffectedFromPos.Value);
+                castling[i] = false;
+                castlingChanged++;
             }
+            //if (castlingChanged >= 4) castling = null;
 
+            this.enPassantPosition = move.GetEnPassantPosition();
 
             uint piece = board.GetCellCode(move.FromPos);
             board.RemovePiece(move.FromPos);
             board.PlaceEntity(piece, move.ToPos);
+
+            PlayedMoves.Push(move);
 
             ChangeCurrentSide();
         }
@@ -157,12 +202,44 @@ namespace ChessLibrary.Engine
         //TEST!!!!
         public void UnMakeLastMove()
         {
+            if (PlayedMoves.Count <= 0) return;
 
-            throw new NotImplementedException();
+            Move move = PlayedMoves.Pop();
 
+            uint piece = board.GetCellCode(move.ToPos);
+            board.RemovePiece(move.ToPos);
+            board.PlaceEntity(piece, move.FromPos);
+
+            this.enPassantPosition = move.GetEnPassantPosition();
+
+            //if (PlayedMoves.Count == 1) this.enPassantPosition = -1;
+
+            var movCastling = move.GetCastlingArrayIndex();
+            foreach (var i in movCastling)
+            {
+                castling[i] = true;
+                castlingChanged--;
+            }
+
+
+            if (move.TryGetAffectedPiecePos(out int? affectedFromPos, out int? affectedToPos))
+            {
+                if (affectedToPos != null) //castling
+                {
+                    uint rook = board.GetCellCode(affectedToPos.Value);
+                    board.RemovePiece(affectedToPos.Value);
+                    board.PlaceEntity(rook, affectedFromPos.Value);
+                }
+                else //capture
+                {
+                    board.PlaceEntity(move.GetAffectedPiece(), affectedFromPos.Value);
+                }
+            }
+
+            ChangeCurrentSide();
         }
 
-         
+
     }
 
 }
