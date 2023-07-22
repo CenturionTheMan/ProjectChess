@@ -20,7 +20,7 @@ namespace ChessLibrary.Engine
         private Dictionary<int,HashSet<int>> pinnedPieces; //piece from which pos is pinned / where it can move
         private bool[] enemyAttackZone;
         private bool isWhiteMove;
-        private bool isEnPassantPawnPinned = false;
+        private int enPassantPawnPinnedPos = -1;
 
         public MovesValidator(Game game, Board board)
         {
@@ -34,7 +34,7 @@ namespace ChessLibrary.Engine
         private void Setup()
         {
             sudoValidPawnsMoves = new();
-            isEnPassantPawnPinned = false;
+            //isEnPassantPawnPinned = false;
             sudoValidMoves = new();
             sudoValidKingMoves = new();
             sudoValidRooksMoves = new();
@@ -60,9 +60,9 @@ namespace ChessLibrary.Engine
             }
             else
             {
-                if(isEnPassantPawnPinned)
+                if(enPassantPawnPinnedPos != -1)
                 {
-                    sudoValidPawnsMoves.RemoveAll(m => m.GetEnPassantPosition() != -1);
+                    sudoValidPawnsMoves.RemoveAll(m => m.GetEnPassantPosition() != -1 && m.FromPos == enPassantPawnPinnedPos);
                 }
                 HandleCastling();
                 sudoValidMoves.AddRange(sudoValidRooksMoves);
@@ -501,58 +501,88 @@ namespace ChessLibrary.Engine
         ///!!!! After enPassantcapture there might be situation when king is left open (Position 3)
         private List<Move> CheckEnemySideLongMoves(int piecePos, Directions direction, int length = Board.BOARD_SINGLE_ROW_SIZE - 1)
         {
-            int dir = (int)direction;
             List<Move> dummy = new();
 
             int endPos = BoardMovementRestrainer.GetSlidingEndCellPosition(piecePos, direction);
             if (piecePos == endPos) return dummy;
 
-            HashSet<int> posInRadius = new();
-            int pinnedPos = -1;
+            int dir = (int)direction;
 
+            HashSet<int> posInRadius = new();
+            posInRadius.Add(piecePos);
+
+            int friendlyPiecePos = -1;
+            int enemyPiecePos = -1;
+            int enemyKingPos = -1;
+
+            //if (piecePos == 26 && direction == Directions.RIGHT)
+            //{
+            //    Console.WriteLine("s");
+            //}
             for (int i = 1; i <= length; i++)
             {
                 int checkPos = piecePos + i * dir;
+                if (piecePos == checkPos) continue; //?
 
-                if (piecePos == checkPos) continue;
 
-                if (!board.CheckIfCellHavePiece(checkPos)) //no piece -> can move
+                if(!board.CheckIfCellHavePiece(checkPos) && friendlyPiecePos == -1 && enemyPiecePos == -1) //no piece and no friendly and enemy piece met
                 {
-                    if (checkPossiblePos==null) posInRadius.Add(checkPos);
-                    if(pinnedPos == -1) enemyAttackZone[checkPos] = true;
+                    enemyAttackZone[checkPos] = true;
+                    posInRadius.Add(checkPos);
                 }
                 else if (board.CheckIfCellHavePieceWithGivenColor(checkPos, !isWhiteMove)) //friendly piece
                 {
+                    if (friendlyPiecePos != -1) return dummy; //two friendly pieces in row -> skip
+                    
+                    if (enemyPiecePos == -1)
+                    {
+                        enemyAttackZone[checkPos] = true;
+                    }
 
-                    enemyAttackZone[checkPos] = true;
-                    return dummy;
+                    friendlyPiecePos = checkPos;
                 }
-                else //enemy piece
+                else if(board.CheckIfCellHavePieceWithGivenColor(checkPos, isWhiteMove))
                 {
-                    if (IsKingOnPos(checkPos))//possible check
+                    if (IsKingOnPos(checkPos)) //is possible check
                     {
-                        enemyAttackZone[checkPos] = true;
-
-                        posInRadius.Add(piecePos);
-                        if (pinnedPos == -1) // there is no pin -> check
-                        {
-                            checkPossiblePos = posInRadius;
-                            //return dummy;
-                        }
-                        else //pin
-                        {
-                            pinnedPieces.Add(pinnedPos, posInRadius);
-                        }
+                        enemyKingPos = checkPos;
                     }
-                    else//possible pin
+                    else //normal enemy piece
                     {
-                        enemyAttackZone[checkPos] = true;
-                        if (pinnedPos != -1) return dummy;
-                        pinnedPos = checkPos;
+                        if (enemyPiecePos != -1) return dummy; //two enemy pieces in row -> skip
+
+                        if (friendlyPiecePos == -1)
+                        {
+                            enemyAttackZone[checkPos] = true;
+                        }
+
+                        enemyPiecePos = checkPos;
                     }
                 }
+               
+                if (checkPos == endPos || enemyKingPos != -1) break;
+                posInRadius.Add(checkPos);
+            }
 
-                if (checkPos == endPos) break;
+            
+
+            if(enemyKingPos != -1 && enemyPiecePos == -1 && friendlyPiecePos == -1)//check
+            {
+                checkPossiblePos = posInRadius;
+            }
+            else if(enemyKingPos != -1 && enemyPiecePos != -1 && friendlyPiecePos == -1)//pin
+            {
+                pinnedPieces.Add(enemyPiecePos, posInRadius);
+            }
+            else if(enemyKingPos != -1 && enemyPiecePos != -1 && friendlyPiecePos != -1)//check enPassant invalid take
+            {
+                if(!game.IsEnPassantPosition(out int gameEnPassantPos)) return dummy;
+
+                int localEn = (isWhiteMove) ? friendlyPiecePos + 8 : friendlyPiecePos - 8;
+                if(localEn == gameEnPassantPos && board.CheckIfCellHavePieceOfGivenClass(enemyPiecePos, PieceClasses.PAWN))
+                {
+                    enPassantPawnPinnedPos = enemyPiecePos;
+                }
             }
 
             return dummy;

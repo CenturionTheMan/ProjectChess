@@ -129,17 +129,16 @@ namespace ChessGui_WF
                     {
                         brush = clickedBrush;
                     }
-
+                    //else if(game != null && game.GetEnemyAttackZone()[x + 8 * y])
+                    //{
+                    //    brush = attackZoneBrush;
+                    //}
                     int xWindowPos = windowOffset.X + x * cellSize.X;
                     int yWindowPos = windowSize.Y - windowOffset.Y - (y + 1) * cellSize.Y;
 
                     g.FillRectangle(brush, xWindowPos, yWindowPos, cellSize.X,cellSize.Y);
                     cellsPositions[x , y] = new Vec2(xWindowPos, yWindowPos);
 
-                    //if (game != null && game.GetEnemyAttackZone()[x + 8 * y])
-                    //{
-                    //    g.FillEllipse(attackZoneBrush, xWindowPos + cellSize.X / 4, yWindowPos + cellSize.Y / 4, cellSize.X/2, cellSize.Y/2);
-                    //}
                     if (validMoves != null && Array.Exists(validMoves, m => m.ToPos == x + 8 * y))
                     {
                         g.FillEllipse(move, xWindowPos + cellSize.X / 4, yWindowPos + cellSize.Y / 4, cellSize.X / 2, cellSize.Y / 2);
@@ -149,6 +148,8 @@ namespace ChessGui_WF
 
             this.BackColor = BORDER_COLOR;
         }
+
+        
 
 
         private void DrawPieceClasses(Graphics g)

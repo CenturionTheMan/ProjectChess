@@ -23,5 +23,11 @@ namespace ChessGui_WF
         {
             boardUserControl.UnmakeLastMove();
         }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            throw new NotImplementedException();
+            //boardUserControl.MoveGeneration(2, 10000);
+        }
     }
 }
