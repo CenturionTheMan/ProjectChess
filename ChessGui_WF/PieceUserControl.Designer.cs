@@ -28,8 +28,22 @@
         /// </summary>
         private void InitializeComponent()
         {
-            components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(PieceUserControl));
+            this.SuspendLayout();
+            // 
+            // PieceUserControl
+            // 
+            resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.BackColor = System.Drawing.Color.Transparent;
+            this.DoubleBuffered = true;
+            this.Name = "PieceUserControl";
+            this.MouseDown += new System.Windows.Forms.MouseEventHandler(this.PieceUserControl_MouseDown);
+            this.MouseLeave += new System.EventHandler(this.PieceUserControl_MouseLeave);
+            this.MouseMove += new System.Windows.Forms.MouseEventHandler(this.PieceUserControl_MouseMove);
+            this.MouseUp += new System.Windows.Forms.MouseEventHandler(this.PieceUserControl_MouseUp);
+            this.ResumeLayout(false);
+
         }
 
         #endregion

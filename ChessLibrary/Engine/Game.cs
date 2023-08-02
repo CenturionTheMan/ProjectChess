@@ -7,6 +7,8 @@ namespace ChessLibrary.Engine
 {
     public class Game
     {
+        public Action<ChessColors> OnCurrentPlayerChanged;
+
         public Stack<Move> PlayedMoves { get; private set; }
 
         int halfmoves, fullmoves;
@@ -36,6 +38,8 @@ namespace ChessLibrary.Engine
             {
                 this.board.PlaceEntity(board[i], i);
             }
+            
+            OnCurrentPlayerChanged?.Invoke(currentSide.Value);
         }
 
 
@@ -54,6 +58,8 @@ namespace ChessLibrary.Engine
             {
                 this.board.PlaceEntity(board[i], i);
             }
+
+            OnCurrentPlayerChanged?.Invoke(currentSide.Value);
         }
 
         private Game()
@@ -116,6 +122,7 @@ namespace ChessLibrary.Engine
         private void ChangeCurrentSide()
         {
             currentSide = (currentSide == ChessColors.WHITE) ? ChessColors.BLACK : ChessColors.WHITE;
+            OnCurrentPlayerChanged?.Invoke(currentSide);
         }
 
 
@@ -167,17 +174,17 @@ namespace ChessLibrary.Engine
 
         public void MakeMove(Move move)
         {
-            if(move.TryGetAffectedPiecePos(out int? affectedFromPos, out int? affectedToPos))
+            if(move.TryGetAffectedPiecePos(out int affectedFromPos, out int? affectedToPos))
             {
                 if (affectedToPos != null) //castling
                 {
-                    uint rook = board.GetCellCode(affectedFromPos.Value);
-                    board.RemovePiece(affectedFromPos.Value);
+                    uint rook = board.GetCellCode(affectedFromPos);
+                    board.RemovePiece(affectedFromPos);
                     board.PlaceEntity(rook, affectedToPos.Value);
                 }
                 else //capture
                 {
-                    board.RemovePiece(affectedFromPos.Value);
+                    board.RemovePiece(affectedFromPos);
                 }
             }
 
@@ -222,17 +229,17 @@ namespace ChessLibrary.Engine
             }
 
 
-            if (move.TryGetAffectedPiecePos(out int? affectedFromPos, out int? affectedToPos))
+            if (move.TryGetAffectedPiecePos(out int affectedFromPos, out int? affectedToPos))
             {
                 if (affectedToPos != null) //castling
                 {
                     uint rook = board.GetCellCode(affectedToPos.Value);
                     board.RemovePiece(affectedToPos.Value);
-                    board.PlaceEntity(rook, affectedFromPos.Value);
+                    board.PlaceEntity(rook, affectedFromPos);
                 }
                 else //capture
                 {
-                    board.PlaceEntity(move.GetAffectedPiece(), affectedFromPos.Value);
+                    board.PlaceEntity(move.GetAffectedPiece(), affectedFromPos);
                 }
             }
 

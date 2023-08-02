@@ -35,6 +35,7 @@
             this.panel1 = new System.Windows.Forms.Panel();
             this.unmakeLastMove = new System.Windows.Forms.Button();
             this.button1 = new System.Windows.Forms.Button();
+            this.currentSideLabel = new System.Windows.Forms.Label();
             this.panel1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -55,6 +56,7 @@
             this.boardUserControl.Name = "boardUserControl";
             this.boardUserControl.Size = new System.Drawing.Size(500, 500);
             this.boardUserControl.TabIndex = 1;
+            this.boardUserControl.MouseDown += new System.Windows.Forms.MouseEventHandler(this.boardUserControl_MouseDown);
             // 
             // initPosTextBox
             // 
@@ -103,12 +105,24 @@
             this.button1.UseVisualStyleBackColor = true;
             this.button1.Click += new System.EventHandler(this.button1_Click);
             // 
+            // currentSideLabel
+            // 
+            this.currentSideLabel.AutoSize = true;
+            this.currentSideLabel.Font = new System.Drawing.Font("Times New Roman", 15.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point);
+            this.currentSideLabel.Location = new System.Drawing.Point(518, 12);
+            this.currentSideLabel.Name = "currentSideLabel";
+            this.currentSideLabel.Size = new System.Drawing.Size(70, 24);
+            this.currentSideLabel.TabIndex = 7;
+            this.currentSideLabel.Text = "TEMP";
+            this.currentSideLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.Linen;
             this.ClientSize = new System.Drawing.Size(881, 521);
+            this.Controls.Add(this.currentSideLabel);
             this.Controls.Add(this.button1);
             this.Controls.Add(this.unmakeLastMove);
             this.Controls.Add(this.panel1);
@@ -119,6 +133,7 @@
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
@@ -132,5 +147,6 @@
         private Panel panel1;
         private Button unmakeLastMove;
         private Button button1;
+        private Label currentSideLabel;
     }
 }

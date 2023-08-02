@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace ChessLibrary.Engine
 {
-    public static class BoardMovementRestrainer
+    internal static class BoardMovementRestrainer
     {
         private static int[,] slidingEndCells;
         private static int[][] knightsValidCells;

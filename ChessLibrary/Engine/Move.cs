@@ -12,9 +12,7 @@ namespace ChessLibrary.Engine
         public readonly int FromPos;
         public readonly int ToPos;
 
-        private uint flags = 0b0000_0000_0000_0000_0000_0000_0000_0000;
-
-        //public readonly uint ToMovePiece;
+        //private uint flags = 0b0000_0000_0000_0000_0000_0000_0000_0000;
 
 
         private int? affectedFromPos = null;
@@ -25,14 +23,14 @@ namespace ChessLibrary.Engine
 
         private int[] castlingArrayIndex = new int[0];
 
-        public Move(int from, int to)
+        internal Move(int from, int to)
         {
             FromPos = from;
             ToPos = to;
         }
 
 
-        public Move AddAffectedPiece(int affectedFromPos, int? affectedToPos, uint affectedPiece)
+        internal Move AddAffectedPiece(int affectedFromPos, int? affectedToPos, uint affectedPiece)
         {
             this.affectedToPos = affectedToPos;
             this.affectedFromPos = affectedFromPos;
@@ -40,13 +38,13 @@ namespace ChessLibrary.Engine
             return this;
         }
 
-        public Move AddEnPassantPosition(int enPassantPosition)
+        internal Move AddEnPassantPosition(int enPassantPosition)
         {
             this.enPassantPosition = enPassantPosition;
             return this;
         }
 
-        public Move AddCastlingFlag(params int[] castlingArrayIndex)
+        internal Move AddCastlingFlag(params int[] castlingArrayIndex)
         {
             this.castlingArrayIndex = castlingArrayIndex;
             return this;
@@ -62,9 +60,9 @@ namespace ChessLibrary.Engine
             return this.enPassantPosition;
         }
 
-        public bool TryGetAffectedPiecePos(out int? affectedFromPos,out int? affectedToPos)
+        public bool TryGetAffectedPiecePos(out int affectedFromPos,out int? affectedToPos)
         {
-            affectedFromPos = this.affectedFromPos;
+            affectedFromPos = this.affectedFromPos.GetValueOrDefault();
             affectedToPos = this.affectedToPos;
             return this.affectedFromPos != null;
         }

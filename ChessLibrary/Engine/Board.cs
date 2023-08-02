@@ -22,13 +22,13 @@ namespace ChessLibrary.Engine
         /// <summary>
         /// Initializes a new instance of the Board class.
         /// </summary>
-        public Board()
+        internal Board()
         {
             boardCells = new uint[BOARD_SIZE];
             piecePositions = new();
         }
 
-        public List<int> GetPiecePositions()
+        internal List<int> GetPiecePositions()
         {
             return piecePositions;
         }
@@ -39,7 +39,7 @@ namespace ChessLibrary.Engine
         /// <param name="pieceClass">The class of the chess piece.</param>
         /// <param name="pieceColor">The color of the chess piece.</param>
         /// <param name="piecePos">The position on the board where the piece will be placed.</param>
-        public void PlacePiece(PieceClasses pieceClass, ChessColors pieceColor, int piecePos)
+        internal void PlacePiece(PieceClasses pieceClass, ChessColors pieceColor, int piecePos)
         {
             var piece = BoardEntityFactory.CreatePiece(pieceClass, pieceColor);
             boardCells[piecePos] = piece;
@@ -51,7 +51,7 @@ namespace ChessLibrary.Engine
         /// </summary>
         /// <param name="pos">The position to check.</param>
         /// <returns>True if the cell contains a piece, otherwise false.</returns>
-        public bool CheckIfCellHavePiece(int pos)
+        internal bool CheckIfCellHavePiece(int pos)
         {
             if (pos >= Board.BOARD_SIZE || pos < 0)
             {
@@ -84,7 +84,7 @@ namespace ChessLibrary.Engine
         /// </summary>
         /// <param name="code">The entity code to place on the board.</param>
         /// <param name="pos">The position on the board where the entity will be placed.</param>
-        public void PlaceEntity(uint code, int pos)
+        internal void PlaceEntity(uint code, int pos)
         {
             boardCells[pos] = code;
             if(BoardEntityFactory.CheckIfPiece(code))
@@ -95,7 +95,7 @@ namespace ChessLibrary.Engine
         /// Removes the chess piece from the specified position on the board.
         /// </summary>
         /// <param name="piecePos">The position on the board to remove the piece from.</param>
-        public void RemovePiece(int piecePos)
+        internal void RemovePiece(int piecePos)
         {
             piecePositions.Remove(piecePos);
             boardCells[piecePos] = BoardEntityFactory.CreateEmpty();
@@ -106,28 +106,28 @@ namespace ChessLibrary.Engine
         /// </summary>
         /// <param name="pos">The position on the board to retrieve the entity code from.</param>
         /// <returns>The entity code present in the specified cell.</returns>
-        public uint GetCellCode(int pos)
+        internal uint GetCellCode(int pos)
         {
             return boardCells[pos];
         }
 
-        public bool IsPositionInsideBoard(int position)
+        internal bool IsPositionInsideBoard(int position)
         {
             return position >= 0 && position < Board.BOARD_SIZE;
         }
 
-        public bool CheckIfCellHavePieceWithGivenColor(int pos, bool isWhite)
+        internal bool CheckIfCellHavePieceWithGivenColor(int pos, bool isWhite)
         {
             ChessColors color = (isWhite) ? ChessColors.WHITE : ChessColors.BLACK;
             return BoardEntityFactory.CheckIfPieceWithGivenColor(GetCellCode(pos), color);
         }
 
-        public bool CheckIfCellHavePieceWithGivenColor(int pos, ChessColors color)
+        internal bool CheckIfCellHavePieceWithGivenColor(int pos, ChessColors color)
         {
             return BoardEntityFactory.CheckIfPieceWithGivenColor(GetCellCode(pos), color);
         }
 
-        public bool CheckIfCellHavePieceOfGivenClass(int pos, PieceClasses pClass)
+        internal bool CheckIfCellHavePieceOfGivenClass(int pos, PieceClasses pClass)
         {
             return pClass == BoardEntityFactory.GetPieceClass(GetCellCode(pos));
         }
@@ -138,7 +138,7 @@ namespace ChessLibrary.Engine
         /// <param name="x">The x-coordinate of the position.</param>
         /// <param name="y">The y-coordinate of the position.</param>
         /// <returns>The entity code present in the specified cell.</returns>
-        public uint GetCellCode(int x, int y)
+        internal uint GetCellCode(int x, int y)
         {
             return boardCells[x + y * 8];
         }

@@ -30,7 +30,12 @@ namespace ChessLibrary.Utilities
         }
         private int y;
 
-
+        public Vec2 (int singleDimPos)
+        {
+            Y = (int)((uint)singleDimPos >> 3);
+            //int posY = pos/8;
+            X = singleDimPos - Y * 8;
+        }
 
         public Vec2(int x, int y)
         {

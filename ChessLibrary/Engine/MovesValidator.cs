@@ -5,7 +5,7 @@ using System.Drawing;
 
 namespace ChessLibrary.Engine
 {
-    public class MovesValidator
+    internal class MovesValidator
     {
         private const int MAX_MOVES_AMOUNT = 218;
         private Game game;

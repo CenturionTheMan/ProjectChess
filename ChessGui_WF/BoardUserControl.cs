@@ -22,26 +22,22 @@ namespace ChessGui_WF
         private readonly Color CLICKED_COLOR = Color.DarkSeaGreen;
 
         private readonly float BOARD_OFFSET_PERC = 0.01f;
-        private readonly string IMAGES_FOLDER_PATH = "Images/";
 
-        private Vec2 windowSize;
-        private Vec2 windowOffset;
-        private Vec2 cellSize;
+        private static Vec2 windowSize;
+        private static Vec2 windowOffset;
+        private static Vec2 cellSize;
 
-        private Vec2[,] cellsPositions;
+        private static Vec2[,] cellsWorldPositions;
+
+        private PieceUserControl[] pieces = new PieceUserControl[Board.BOARD_SIZE];
 
         private Game game;
 
-        private Dictionary<uint, Image> imagesDic;
-
-        private Vec2? clickedMousePosFrom = null;
-        private Vec2? clickedMousePosFromPrev = null;
-
+        private Vec2 clickedMousePosFrom = null;
 
         public BoardUserControl()
         {
-            imagesDic = new();
-            cellsPositions = new Vec2[Board.BOARD_SINGLE_ROW_SIZE, Board.BOARD_SINGLE_ROW_SIZE];
+            cellsWorldPositions = new Vec2[Board.BOARD_SINGLE_ROW_SIZE, Board.BOARD_SINGLE_ROW_SIZE];
             InitializeComponent();
 
             windowSize = new Vec2(this.Size.Width, this.Size.Height);
@@ -54,52 +50,73 @@ namespace ChessGui_WF
         public void InitGame(Game game)
         {
             this.game = game;
-            var piecePositions = game.GetPiecePositions();
-            foreach (var piecePos in piecePositions)
+            SetupPieces();
+        }
+
+        private void SetupPieces()
+        {
+            for (int i = 0; i < Board.BOARD_SIZE; i++)
             {
-                _ = game.TryGetPieceAtPosition(piecePos, out PieceClasses pieceClass, out ChessColors color);
-                string imagePath = IMAGES_FOLDER_PATH + PieceToImagePath(pieceClass, color);
-                Image image = Image.FromFile(imagePath);
-                imagesDic.TryAdd(BoardEntityFactory.CreatePiece(pieceClass, color), image);
+                if (game.TryGetPieceAtPosition(i, out PieceClasses pieceClass, out ChessColors color))
+                {
+                    if (pieces[i] != null && pieces[i].IsEqual(pieceClass, color)) continue;
+
+                    if (pieces[i] != null)
+                    {
+                        pieces[i].OnPiecePressed -= HandlePiecePressed;
+                        pieces[i].OnPieceDrop -= TryChangePiecePos;
+                        this.Controls.Remove(pieces[i]);
+                    }
+                    Vec2 pieceVecPos = new Vec2(i);
+                    pieces[i] = new PieceUserControl(pieceClass, color, cellsWorldPositions[pieceVecPos.X, pieceVecPos.Y], pieceVecPos, cellSize);
+                    
+                    pieces[i].OnPiecePressed += HandlePiecePressed;
+                    pieces[i].OnPieceDrop += TryChangePiecePos;
+
+                    this.Controls.Add(pieces[i]);
+                }
+                else
+                {
+                    if (pieces[i] == null) continue;
+                    pieces[i].OnPiecePressed -= HandlePiecePressed;
+                    pieces[i].OnPieceDrop -= TryChangePiecePos;
+                    this.Controls.Remove(pieces[i]);
+                    pieces[i] = null;
+                }
+            }
+        }
+
+        private void TryChangePiecePos(Vec2 originalGridPos, Vec2 tryToGridPos)
+        {
+            Move? move = game.GetValidMoves().FirstOrDefault(m => originalGridPos.ToBoardPosition() == m.FromPos && m.ToPos == tryToGridPos.ToBoardPosition());
+            if (move != null)
+            {
+                game.MakeMove(move);
+                SetupPieces();
+            }
+            else
+            {
+                pieces[originalGridPos.ToBoardPosition()].ResetPiecePos();
             }
 
-
+            clickedMousePosFrom = null;
             this.Invalidate();
         }
 
-        public void UnmakeLastMove()
+
+        public void UnMakeLastMove()
         {
-            if (game == null) return;
             game.UnMakeLastMove();
+            SetupPieces();
+
             this.Invalidate();
         }
 
-        private void ChangePieceImage(uint piece)
+        private void HandlePiecePressed(Vec2 gridPos)
         {
-            if(imagesDic.ContainsKey(piece))
-            {
-                imagesDic.Remove(piece);
-            }
-            _ = BoardEntityFactory.CheckIfPiece(piece, out PieceClasses pieceClass, out ChessColors color);
-            string imagePath = IMAGES_FOLDER_PATH + PieceToImagePath(pieceClass, color);
-            Image image = Image.FromFile(imagePath);
-            imagesDic.Add(piece, image);
+            clickedMousePosFrom = gridPos;
             this.Invalidate();
         }
-
-        //private void DrawSpecyficSquare(Graphics g, Vec2 pos, Color color)
-        //{
-        //    Brush brush = new SolidBrush(color);
-        //    g.FillRectangle(brush, pos.X, pos.Y, cellSize.X, cellSize.Y);
-
-        //    if (board == null) return;
-
-        //    if (board.GetCell(pos).HasPiece(out var piece))
-        //    {
-        //        if (!imagesDic.TryGetValue(piece, out Image img)) return;
-        //        g.DrawImage(img, pos.X, pos.Y, cellSize.X, cellSize.Y);
-        //    }
-        //}
 
         private void DrawBoard(Graphics g)
         {
@@ -110,13 +127,10 @@ namespace ChessGui_WF
             Brush attackZoneBrush = new SolidBrush(Color.Red);
 
             Move[] validMoves = null;
-            if (clickedMousePosFrom != null)
+            if(game != null)
             {
-                int singleDimPos = clickedMousePosFrom.ToBoardPosition();
                 validMoves = game.GetValidMoves();
-                validMoves = Array.FindAll(validMoves, m => m.FromPos == singleDimPos);
             }
-
 
             for (int y = 0; y < Board.BOARD_SINGLE_ROW_SIZE; y++)
             {
@@ -124,86 +138,30 @@ namespace ChessGui_WF
                 {
                     Brush brush = ((x+y)%2==0)? blackBrush : whiteBrush;
 
-                    
+
                     if (clickedMousePosFrom != null && clickedMousePosFrom.Equals(x, y))
                     {
                         brush = clickedBrush;
                     }
-                    //else if(game != null && game.GetEnemyAttackZone()[x + 8 * y])
-                    //{
-                    //    brush = attackZoneBrush;
-                    //}
+                    else if(validMoves != null && clickedMousePosFrom != null && Array.Exists(validMoves, m => m.FromPos == clickedMousePosFrom.ToBoardPosition() && m.ToPos == new Vec2(x,y).ToBoardPosition()))
+                    {
+                        brush = move;
+                    }
+
                     int xWindowPos = windowOffset.X + x * cellSize.X;
                     int yWindowPos = windowSize.Y - windowOffset.Y - (y + 1) * cellSize.Y;
 
                     g.FillRectangle(brush, xWindowPos, yWindowPos, cellSize.X,cellSize.Y);
-                    cellsPositions[x , y] = new Vec2(xWindowPos, yWindowPos);
-
-                    if (validMoves != null && Array.Exists(validMoves, m => m.ToPos == x + 8 * y))
-                    {
-                        g.FillEllipse(move, xWindowPos + cellSize.X / 4, yWindowPos + cellSize.Y / 4, cellSize.X / 2, cellSize.Y / 2);
-                    }
+                    cellsWorldPositions[x , y] = new Vec2(xWindowPos, yWindowPos);
                 }
             }
 
             this.BackColor = BORDER_COLOR;
         }
 
-        
-
-
-        private void DrawPieceClasses(Graphics g)
-        {
-            if (game == null) return;
-
-            foreach (var piecePos in game.GetPiecePositions())
-            {
-                var piece = game.GetCellCode(piecePos);
-                if (!imagesDic.TryGetValue(piece, out Image img)) continue;
-                int y = (int)Math.Floor(piecePos / (float)8);
-                int x = piecePos - y*8;
-                g.DrawImage(img, cellsPositions[x, y].X, cellsPositions[x, y].Y, cellSize.X, cellSize.Y);
-            }
-        }
-
-        private string PieceToImagePath(PieceClasses pClass, ChessColors color)
-        {
-            string path = "";
-            switch (pClass)
-            {
-                case PieceClasses.KING:
-                    path = "King";
-                    break;
-                case PieceClasses.QUEEN:
-                    path = "Queen";
-                    break;
-                case PieceClasses.ROOK:
-                    path = "Rook";
-                    break;
-                case PieceClasses.BISHOP:
-                    path = "Bishop";
-                    break;
-                case PieceClasses.PAWN:
-                    path = "Pawn";
-                    break;
-                case PieceClasses.KNIGHT:
-                    path = "Knight";
-                    break;
-                default:
-                    throw new Exception();
-            }
-
-            path += (color == ChessColors.WHITE) ? "W" : "B";
-            path += ".png";
-            return path;
-        }
-
         private void BoardUserControl_Paint(object sender, PaintEventArgs e)
-        {
-            
-
+        {          
             DrawBoard(e.Graphics);
-            DrawPieceClasses(e.Graphics);
         }
 
         private void BoardUserControl_MouseDown(object sender, MouseEventArgs e)
@@ -211,8 +169,19 @@ namespace ChessGui_WF
             if (e.Button != MouseButtons.Left)
                 return;
 
-            int xPos = e.Location.X;
-            int yPos = e.Location.Y;
+            //this.Invalidate(false);
+            //MessageBox.Show($"{e.Location} || x= {indexX}, y= {indexY}");
+        }
+
+        private void BoardUserControl_MouseUp(object sender, MouseEventArgs e)
+        {
+            //clickedMousePosFrom = null;
+        }
+
+        public static Vec2 WordPosToGridPos(Vec2 worldPos)
+        {
+            int xPos = worldPos.X;
+            int yPos = worldPos.Y;
 
             float xBoard = xPos / (float)cellSize.X;
             float yBoard = (windowSize.Y - yPos) / (float)cellSize.Y;
@@ -222,36 +191,12 @@ namespace ChessGui_WF
 
             indexX = Math.Clamp(indexX, 0, 7);
             indexY = Math.Clamp(indexY, 0, 7);
-
-            if (clickedMousePosFrom != null)
-            {
-                clickedMousePosFromPrev = clickedMousePosFrom;
-                TryMakeMove(new Vec2(indexX, indexY));
-            }
-            else
-                clickedMousePosFrom = new Vec2(indexX, indexY);
-
-            this.Invalidate();
+            return new Vec2(indexX, indexY);
         }
 
-        private void TryMakeMove(Vec2 pos)
+        public static Vec2 GridPosToWorldPos(Vec2 gridPos)
         {
-            var moves = game.GetValidMoves();
-            var move = Array.Find(moves, m => m.FromPos == clickedMousePosFrom.ToBoardPosition() && m.ToPos == pos.ToBoardPosition());
-            if (move != null)
-            {
-                game.MakeMove(move);
-                clickedMousePosFrom = null;
-            }
-            else
-            {
-                clickedMousePosFrom = pos;
-            }
-        }
-
-        private void BoardUserControl_MouseUp(object sender, MouseEventArgs e)
-        {
-            //clickedMousePosFrom = null;
+            return cellsWorldPositions[gridPos.X, gridPos.Y];
         }
     }
 }
