@@ -34,7 +34,7 @@
             this.label1 = new System.Windows.Forms.Label();
             this.panel1 = new System.Windows.Forms.Panel();
             this.unmakeLastMove = new System.Windows.Forms.Button();
-            this.button1 = new System.Windows.Forms.Button();
+            this.allPositionsButton = new System.Windows.Forms.Button();
             this.currentSideLabel = new System.Windows.Forms.Label();
             this.panel1.SuspendLayout();
             this.SuspendLayout();
@@ -95,15 +95,15 @@
             this.unmakeLastMove.UseVisualStyleBackColor = true;
             this.unmakeLastMove.Click += new System.EventHandler(this.unmakeLastMove_Click);
             // 
-            // button1
+            // allPositionsButton
             // 
-            this.button1.Location = new System.Drawing.Point(521, 216);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(191, 43);
-            this.button1.TabIndex = 6;
-            this.button1.Text = "ShowAllPositions";
-            this.button1.UseVisualStyleBackColor = true;
-            this.button1.Click += new System.EventHandler(this.button1_Click);
+            this.allPositionsButton.Location = new System.Drawing.Point(521, 216);
+            this.allPositionsButton.Name = "allPositionsButton";
+            this.allPositionsButton.Size = new System.Drawing.Size(191, 43);
+            this.allPositionsButton.TabIndex = 6;
+            this.allPositionsButton.Text = "ShowAllPositions";
+            this.allPositionsButton.UseVisualStyleBackColor = true;
+            this.allPositionsButton.Click += new System.EventHandler(this.allPositionsButton_Click);
             // 
             // currentSideLabel
             // 
@@ -123,7 +123,7 @@
             this.BackColor = System.Drawing.Color.Linen;
             this.ClientSize = new System.Drawing.Size(881, 521);
             this.Controls.Add(this.currentSideLabel);
-            this.Controls.Add(this.button1);
+            this.Controls.Add(this.allPositionsButton);
             this.Controls.Add(this.unmakeLastMove);
             this.Controls.Add(this.panel1);
             this.Controls.Add(this.boardUserControl);
@@ -146,7 +146,7 @@
         private Label label1;
         private Panel panel1;
         private Button unmakeLastMove;
-        private Button button1;
+        private Button allPositionsButton;
         private Label currentSideLabel;
     }
 }

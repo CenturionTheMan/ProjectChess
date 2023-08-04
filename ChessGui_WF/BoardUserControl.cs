@@ -31,7 +31,7 @@ namespace ChessGui_WF
 
         private PieceUserControl[] pieces = new PieceUserControl[Board.BOARD_SIZE];
 
-        private Game game;
+        public Game game;
 
         private Vec2 clickedMousePosFrom = null;
 
@@ -101,8 +101,22 @@ namespace ChessGui_WF
 
             clickedMousePosFrom = null;
             this.Invalidate();
+            this.Update();
         }
 
+        public void MakeMove(Move move)
+        {
+            if (move != null)
+            {
+                game.MakeMove(move);
+                SetupPieces();
+            }
+
+            clickedMousePosFrom = null;
+            this.Invalidate();
+            this.Update();
+
+        }
 
         public void UnMakeLastMove()
         {
@@ -110,6 +124,8 @@ namespace ChessGui_WF
             SetupPieces();
 
             this.Invalidate();
+            this.Update();
+
         }
 
         private void HandlePiecePressed(Vec2 gridPos)

@@ -50,8 +50,14 @@ namespace ChessLibrary.Engine
 
             SetupSudoValidMoves();
 
-            sudoValidKingMoves.RemoveAll(m => enemyAttackZone[m.ToPos] == true);
+            sudoValidKingMoves.RemoveAll(m => enemyAttackZone[m.ToPos] == true); //king can not move to enemy attack range
 
+            if (enPassantPawnPinnedPos != -1) //remove pinned pawns from enPassant capture
+            {
+                sudoValidPawnsMoves.RemoveAll(m => m.GetEnPassantPosition() != -1 && m.FromPos == enPassantPawnPinnedPos);
+            }
+
+            
             if (checkPossiblePos != null)
             {
                 sudoValidMoves.AddRange(sudoValidRooksMoves);
@@ -60,15 +66,14 @@ namespace ChessLibrary.Engine
             }
             else
             {
-                if(enPassantPawnPinnedPos != -1)
-                {
-                    sudoValidPawnsMoves.RemoveAll(m => m.GetEnPassantPosition() != -1 && m.FromPos == enPassantPawnPinnedPos);
-                }
                 HandleCastling();
                 sudoValidMoves.AddRange(sudoValidRooksMoves);
                 sudoValidMoves.AddRange(sudoValidPawnsMoves);
-                sudoValidMoves.RemoveAll(m => pinnedPieces.TryGetValue(m.FromPos, out var valid) && !valid.Contains(m.ToPos)); //pin
             }
+            
+            
+            sudoValidMoves.RemoveAll(m => pinnedPieces.TryGetValue(m.FromPos, out var valid) && !valid.Contains(m.ToPos)); //pin
+
 
             sudoValidMoves.AddRange(sudoValidKingMoves);
             return sudoValidMoves.ToArray();

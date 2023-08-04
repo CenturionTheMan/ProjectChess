@@ -41,5 +41,31 @@ namespace ChessGui_WF
         {
             //MessageBox.Show(e.X.ToString(), e.Y.ToString());
         }
+
+        private void allPositionsButton_Click(object sender, EventArgs e)
+        {
+            MoveGeneration(2);
+        }
+
+        private int MoveGeneration(int depth)
+        {
+            if (depth == 0)
+            {
+                return 1;
+            }
+            var currentMoves = boardUserControl.game.GetValidMoves();
+            int movesAmount = 0;
+
+            foreach (var move in currentMoves)
+            {
+                boardUserControl.MakeMove(move);
+                Thread.Sleep(500);
+                movesAmount += MoveGeneration(depth - 1);
+                boardUserControl.UnMakeLastMove();
+                Thread.Sleep(500);
+            }
+
+            return movesAmount;
+        }
     }
 }
