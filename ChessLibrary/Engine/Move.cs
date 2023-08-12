@@ -23,6 +23,8 @@ namespace ChessLibrary.Engine
 
         private int[] castlingArrayIndex = new int[0];
 
+        private PieceClasses promoteToPiece = PieceClasses.NONE;
+
         internal Move(int from, int to)
         {
             FromPos = from;
@@ -48,6 +50,18 @@ namespace ChessLibrary.Engine
         {
             this.castlingArrayIndex = castlingArrayIndex;
             return this;
+        }
+
+        internal Move AddPromotionFlag(PieceClasses pieceNewClass)
+        {
+            this.promoteToPiece = pieceNewClass;
+            return this;
+        }
+
+        public bool TryGetPromotion(out PieceClasses newPieceCode)
+        {
+            newPieceCode = promoteToPiece;
+            return promoteToPiece != PieceClasses.NONE;
         }
 
         public int[] GetCastlingArrayIndex()

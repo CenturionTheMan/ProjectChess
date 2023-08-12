@@ -13,6 +13,9 @@ namespace ChessLibrary.Engine
         private static int[][] knightsValidCells;
         private static (int low, int high) whitePawnsOriginCells = (7, 16);
         private static (int low, int high) blackPawnsOriginCells = (47, 56);
+        private static (int low, int high) whitePawnsPromotionCells = (56, 63);
+        private static (int low, int high) blackPawnsPromotionCells = (0, 7);
+
 
 
         //private static readonly Vec2[] knightOffsets = { new Vec2(1,2), new Vec2(2,1), new Vec2(2,-1), new Vec2(1,-2), new Vec2(-1,-2), new Vec2(-2,-1), new Vec2(-2,1), new Vec2(-1,2) };
@@ -126,6 +129,18 @@ namespace ChessLibrary.Engine
         public static bool IsPositionBeginBlackPawnPosition(int position)
         {
             return position > blackPawnsOriginCells.low && position < blackPawnsOriginCells.high;
+        }
+
+        public static bool IsPositionPawnPromotionPosition(int position, bool isWhitePawn)
+        {
+            if(isWhitePawn)
+            {
+                return position > whitePawnsPromotionCells.low && position < whitePawnsPromotionCells.high;
+            }
+            else
+            {
+                return position > blackPawnsPromotionCells.low && position < blackPawnsPromotionCells.high;
+            }
         }
     }
 }

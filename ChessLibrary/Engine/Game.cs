@@ -25,6 +25,8 @@ namespace ChessLibrary.Engine
         private bool[] castling;
         private int castlingChanged = 0;
 
+        private Move[] currentValidMoves = null;
+
         #region CTOR
 
         public Game(string fen) : this()
@@ -38,6 +40,11 @@ namespace ChessLibrary.Engine
             {
                 this.board.PlaceEntity(board[i], i);
             }
+
+            if (castling[0] == false) castlingChanged++;
+            if (castling[1] == false) castlingChanged++;
+            if (castling[2] == false) castlingChanged++;
+            if (castling[3] == false) castlingChanged++;
             
             OnCurrentPlayerChanged?.Invoke(currentSide.Value);
         }
@@ -58,6 +65,11 @@ namespace ChessLibrary.Engine
             {
                 this.board.PlaceEntity(board[i], i);
             }
+
+            if (castling[0] == false) castlingChanged++;
+            if (castling[1] == false) castlingChanged++;
+            if (castling[2] == false) castlingChanged++;
+            if (castling[3] == false) castlingChanged++;
 
             OnCurrentPlayerChanged?.Invoke(currentSide.Value);
         }
@@ -107,7 +119,8 @@ namespace ChessLibrary.Engine
 
         public Move[] GetValidMoves()
         {
-            return movesValidator.GetValidMoves();
+            if(currentValidMoves == null) currentValidMoves = movesValidator.GetValidMoves();
+            return currentValidMoves;
         }
 
         public ChessColors GetCurrentlyPlayingSide()
@@ -190,7 +203,7 @@ namespace ChessLibrary.Engine
 
             foreach (var i in move.GetCastlingArrayIndex())
             {
-                castling[i] = false;
+                this.castling[i] = false;
                 castlingChanged++;
             }
             //if (castlingChanged >= 4) castling = null;
@@ -199,11 +212,19 @@ namespace ChessLibrary.Engine
 
             uint piece = board.GetCellCode(move.FromPos);
             board.RemovePiece(move.FromPos);
-            board.PlaceEntity(piece, move.ToPos);
+            
+            if(move.TryGetPromotion(out PieceClasses newClass))
+            {
+                board.PlacePiece(newClass, currentSide, move.ToPos);
+            }
+            else
+                board.PlaceEntity(piece, move.ToPos);
 
             PlayedMoves.Push(move);
 
             ChangeCurrentSide();
+
+            currentValidMoves = movesValidator.GetValidMoves();
         }
 
         //TEST!!!!
@@ -215,7 +236,16 @@ namespace ChessLibrary.Engine
 
             uint piece = board.GetCellCode(move.ToPos);
             board.RemovePiece(move.ToPos);
-            board.PlaceEntity(piece, move.FromPos);
+
+            if (move.TryGetPromotion(out PieceClasses newClass))
+            {
+                var color = BoardEntityFactory.GetPieceColor(piece);
+                board.PlacePiece(PieceClasses.PAWN, color, move.FromPos);
+            }
+            else
+            {
+                board.PlaceEntity(piece, move.FromPos);
+            }
 
             this.enPassantPosition = move.GetEnPassantPosition();
 
@@ -244,6 +274,8 @@ namespace ChessLibrary.Engine
             }
 
             ChangeCurrentSide();
+
+            currentValidMoves = movesValidator.GetValidMoves();
         }
 
 

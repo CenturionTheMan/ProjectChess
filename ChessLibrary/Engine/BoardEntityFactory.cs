@@ -89,6 +89,12 @@ namespace ChessLibrary.Engine
             return (PieceClasses)onlyPieceClassCode;
         }
 
+        public static ChessColors GetPieceColor(uint pieceCode)
+        {
+            var onlyPieceClassCode = pieceCode & COLOR_MASK;
+            return (ChessColors)onlyPieceClassCode;
+        }
+
         /// <summary>
         /// Creates an empty piece code.
         /// </summary>

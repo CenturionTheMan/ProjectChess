@@ -65,7 +65,7 @@
             this.initPosTextBox.Name = "initPosTextBox";
             this.initPosTextBox.Size = new System.Drawing.Size(246, 43);
             this.initPosTextBox.TabIndex = 2;
-            this.initPosTextBox.Text = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+            this.initPosTextBox.Text = "8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - ";
             // 
             // label1
             // 
@@ -130,6 +130,8 @@
             this.Controls.Add(this.startButton);
             this.Name = "Form1";
             this.Text = "Form1";
+            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.Form1_KeyDown);
+            this.MouseClick += new System.Windows.Forms.MouseEventHandler(this.Form1_MouseClick);
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();
             this.ResumeLayout(false);

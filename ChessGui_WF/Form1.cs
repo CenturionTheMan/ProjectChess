@@ -41,13 +41,13 @@ namespace ChessGui_WF
         {
             //MessageBox.Show(e.X.ToString(), e.Y.ToString());
         }
-
+        
         private void allPositionsButton_Click(object sender, EventArgs e)
         {
-            MoveGeneration(2);
+            _ = Task.Run(() => MoveGeneration(3));
         }
 
-        private int MoveGeneration(int depth)
+        private async Task<int> MoveGeneration(int depth)
         {
             if (depth == 0)
             {
@@ -58,14 +58,43 @@ namespace ChessGui_WF
 
             foreach (var move in currentMoves)
             {
-                boardUserControl.MakeMove(move);
-                Thread.Sleep(500);
-                movesAmount += MoveGeneration(depth - 1);
-                boardUserControl.UnMakeLastMove();
-                Thread.Sleep(500);
+                this.Invoke(new Action(() =>
+                {
+                    boardUserControl.MakeMove(move);
+                }));
+
+                while (wasKeyDown == false)
+                {
+                    await Task.Delay(2);
+                }
+                wasKeyDown = false;
+
+                movesAmount += await MoveGeneration(depth - 1);
+
+                this.Invoke(new Action(() =>
+                {
+                    boardUserControl.UnMakeLastMove();
+                }));
+
+                //while (wasKeyDown == false)
+                //{
+                //    await Task.Delay(10);
+                //}
+                //wasKeyDown = false;
             }
 
             return movesAmount;
+        }
+
+        bool wasKeyDown = false;
+        private void Form1_KeyDown(object sender, KeyEventArgs e)
+        {
+            
+        }
+
+        private void Form1_MouseClick(object sender, MouseEventArgs e)
+        {
+            wasKeyDown = true;
         }
     }
 }

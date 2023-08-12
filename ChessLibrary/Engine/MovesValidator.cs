@@ -316,7 +316,7 @@ namespace ChessLibrary.Engine
                     }
                     else if (board.CheckIfCellHavePieceWithGivenColor(checkPos, !isWhiteMove)) //friendly piece
                     {
-                        return;
+                        continue;
                     }
                     else //enemy piece
                     {
@@ -409,8 +409,18 @@ namespace ChessLibrary.Engine
                 int singleForPos = 8 * dirMuti + piecePos;
                 if (board.IsPositionInsideBoard(singleForPos) && !board.CheckIfCellHavePiece(singleForPos))
                 {
-                    moves.Add(new Move(piecePos, singleForPos));
-                    
+                    if(BoardMovementRestrainer.IsPositionPawnPromotionPosition(singleForPos, isWhiteMove))
+                    {
+                        moves.Add(new Move(piecePos, singleForPos).AddPromotionFlag(PieceClasses.QUEEN));
+                        moves.Add(new Move(piecePos, singleForPos).AddPromotionFlag(PieceClasses.ROOK));
+                        moves.Add(new Move(piecePos, singleForPos).AddPromotionFlag(PieceClasses.KNIGHT));
+                        moves.Add(new Move(piecePos, singleForPos).AddPromotionFlag(PieceClasses.BISHOP));
+                    }
+                    else
+                    {
+                        moves.Add(new Move(piecePos, singleForPos));
+                    }
+
                     if (isBeginPos) //double forward
                     {
                         int pos = 16 * dirMuti + piecePos;
@@ -428,11 +438,23 @@ namespace ChessLibrary.Engine
                     if (board.IsPositionInsideBoard(rightForCapture))
                     {
                         if (board.CheckIfCellHavePieceWithGivenColor(rightForCapture, !isWhiteMove))
-                            moves.Add(new Move(piecePos, rightForCapture).AddAffectedPiece(rightForCapture, null, board.GetCellCode(rightForCapture)));
+                        {
+                            if (BoardMovementRestrainer.IsPositionPawnPromotionPosition(singleForPos, isWhiteMove))
+                            {
+                                moves.Add(new Move(piecePos, rightForCapture).AddAffectedPiece(rightForCapture, null, board.GetCellCode(rightForCapture)).AddPromotionFlag(PieceClasses.QUEEN));
+                                moves.Add(new Move(piecePos, rightForCapture).AddAffectedPiece(rightForCapture, null, board.GetCellCode(rightForCapture)).AddPromotionFlag(PieceClasses.ROOK));
+                                moves.Add(new Move(piecePos, rightForCapture).AddAffectedPiece(rightForCapture, null, board.GetCellCode(rightForCapture)).AddPromotionFlag(PieceClasses.BISHOP));
+                                moves.Add(new Move(piecePos, rightForCapture).AddAffectedPiece(rightForCapture, null, board.GetCellCode(rightForCapture)).AddPromotionFlag(PieceClasses.KNIGHT));
+                            }
+                            else
+                            {
+                                moves.Add(new Move(piecePos, rightForCapture).AddAffectedPiece(rightForCapture, null, board.GetCellCode(rightForCapture)));
+                            }
+                        }
                         else if (game.IsEnPassantPosition(out int enPassant) && enPassant == rightForCapture)
                         {
                             int affectedPos = rightForCapture + 8 * dirMuti * -1;
-                            if(board.CheckIfCellHavePieceWithGivenColor(affectedPos, !isWhiteMove))
+                            if (board.CheckIfCellHavePieceWithGivenColor(affectedPos, !isWhiteMove))
                                 moves.Add(new Move(piecePos, rightForCapture).AddAffectedPiece(affectedPos, null, board.GetCellCode(rightForCapture + 8 * dirMuti * -1))
                                     .AddEnPassantPosition(rightForCapture));
                         }
@@ -447,7 +469,19 @@ namespace ChessLibrary.Engine
                     if (board.IsPositionInsideBoard(leftForCapture))
                     {
                         if (board.CheckIfCellHavePieceWithGivenColor(leftForCapture, !isWhiteMove))
-                            moves.Add(new Move(piecePos, leftForCapture).AddAffectedPiece(leftForCapture, null, board.GetCellCode(leftForCapture)));
+                        {
+                            if (BoardMovementRestrainer.IsPositionPawnPromotionPosition(singleForPos, isWhiteMove))
+                            {
+                                moves.Add(new Move(piecePos, leftForCapture).AddAffectedPiece(leftForCapture, null, board.GetCellCode(leftForCapture)).AddPromotionFlag(PieceClasses.QUEEN));
+                                moves.Add(new Move(piecePos, leftForCapture).AddAffectedPiece(leftForCapture, null, board.GetCellCode(leftForCapture)).AddPromotionFlag(PieceClasses.ROOK));
+                                moves.Add(new Move(piecePos, leftForCapture).AddAffectedPiece(leftForCapture, null, board.GetCellCode(leftForCapture)).AddPromotionFlag(PieceClasses.KNIGHT));
+                                moves.Add(new Move(piecePos, leftForCapture).AddAffectedPiece(leftForCapture, null, board.GetCellCode(leftForCapture)).AddPromotionFlag(PieceClasses.BISHOP));
+                            }
+                            else
+                            {
+                                moves.Add(new Move(piecePos, leftForCapture).AddAffectedPiece(leftForCapture, null, board.GetCellCode(leftForCapture)));
+                            }
+                        }
                         else if (game.IsEnPassantPosition(out int enPassant) && enPassant == leftForCapture)
                         {
                             int affectedPos = leftForCapture + 8 * dirMuti * -1;
@@ -524,7 +558,8 @@ namespace ChessLibrary.Engine
             //{
             //    Console.WriteLine("s");
             //}
-            for (int i = 1; i <= length; i++)
+            int i;
+            for (i = 1; i <= length; i++)
             {
                 int checkPos = piecePos + i * dir;
                 if (piecePos == checkPos) continue; //?
@@ -569,10 +604,16 @@ namespace ChessLibrary.Engine
                 posInRadius.Add(checkPos);
             }
 
-            
 
             if(enemyKingPos != -1 && enemyPiecePos == -1 && friendlyPiecePos == -1)//check
             {
+                for (; i <= length; i++)
+                {
+                    int checkPos = piecePos + i * dir;
+                    enemyAttackZone[checkPos] = true;
+                    if (checkPos == endPos) break;
+                }
+
                 checkPossiblePos = posInRadius;
             }
             else if(enemyKingPos != -1 && enemyPiecePos != -1 && friendlyPiecePos == -1)//pin

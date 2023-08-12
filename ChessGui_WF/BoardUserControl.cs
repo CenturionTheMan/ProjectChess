@@ -18,8 +18,8 @@ namespace ChessGui_WF
         private readonly Color BLACK_CELL_COLOR = Color.RosyBrown;
         private readonly Color WHITE_CELL_COLOR = Color.AntiqueWhite;
         private readonly Color BORDER_COLOR = Color.SaddleBrown;
-        private readonly Color MOVE_COLOR = Color.Gray;
-        private readonly Color CLICKED_COLOR = Color.DarkSeaGreen;
+        private readonly Color MOVE_COLOR = Color.DarkSeaGreen;
+        private readonly Color CLICKED_COLOR = Color.DarkGreen;
 
         private readonly float BOARD_OFFSET_PERC = 0.01f;
 
@@ -139,6 +139,7 @@ namespace ChessGui_WF
             Brush whiteBrush = new SolidBrush(WHITE_CELL_COLOR);
             Brush blackBrush = new SolidBrush(BLACK_CELL_COLOR);
             Brush move = new SolidBrush(MOVE_COLOR);
+            Brush playedMove = new SolidBrush(Color.Gray);
             Brush clickedBrush = new SolidBrush(CLICKED_COLOR);
             Brush attackZoneBrush = new SolidBrush(Color.Red);
 
@@ -154,6 +155,11 @@ namespace ChessGui_WF
                 {
                     Brush brush = ((x+y)%2==0)? blackBrush : whiteBrush;
 
+                    if (game != null && game.PlayedMoves.Count > 0)
+                    {
+                        var lastMove = game.PlayedMoves.Peek();
+                        if (lastMove.FromPos == new Vec2(x, y).ToBoardPosition() || lastMove.ToPos == new Vec2(x, y).ToBoardPosition()) brush = playedMove;
+                    }
 
                     if (clickedMousePosFrom != null && clickedMousePosFrom.Equals(x, y))
                     {
@@ -163,6 +169,8 @@ namespace ChessGui_WF
                     {
                         brush = move;
                     }
+
+                    
 
                     int xWindowPos = windowOffset.X + x * cellSize.X;
                     int yWindowPos = windowSize.Y - windowOffset.Y - (y + 1) * cellSize.Y;
