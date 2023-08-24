@@ -34,7 +34,7 @@ namespace ChessLibrary.Engine
         private void Setup()
         {
             sudoValidPawnsMoves = new();
-            //isEnPassantPawnPinned = false;
+            enPassantPawnPinnedPos = -1;
             sudoValidMoves = new();
             sudoValidKingMoves = new();
             sudoValidRooksMoves = new();
