@@ -13,27 +13,31 @@ namespace ChessTests
         {
             Game game = new Game(fen);
 
-            int movesAmount = MoveGeneration(game, depth);
+            int movesAmount = Prefit(game, depth);
             return movesAmount;
         }
 
-        private static int MoveGeneration(Game game, int depth)
+        private static int Prefit(Game game, int depth)
         {
-            if (depth == 0)
-            {
-                return 1;
-            }
             var currentMoves = game.GetValidMoves();
-            int movesAmount = 0;
+            int nMoves = currentMoves.Length;
+            int totalNodes = 0;
+
+            if (depth == 1)
+            {
+                return nMoves;
+            }
+
 
             foreach (var move in currentMoves)
             {
                 game.MakeMove(move);
-                movesAmount += MoveGeneration(game, depth - 1);
+                totalNodes += Prefit(game, depth - 1);
                 game.UnMakeLastMove();
             }
 
-            return movesAmount;
+            return totalNodes;
         }
+
     }
 }

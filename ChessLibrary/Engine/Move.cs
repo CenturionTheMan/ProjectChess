@@ -85,5 +85,10 @@ namespace ChessLibrary.Engine
         {
             return affectedPiece;
         }
+
+        public string PosToString()
+        {
+            return ChessStringsHandler.BoardPositionToString(FromPos)+ ChessStringsHandler.BoardPositionToString(ToPos);
+        }
     }
 }

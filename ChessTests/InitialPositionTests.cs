@@ -50,7 +50,7 @@ namespace ChessTests
         [Fact]
         public void TestMovesAmountDepth6()
         {
-            //Assert.Equal(119_060_324, TestDepth(6));
+            Assert.Equal(119_060_324, TestAllMoveGenerator.TestPositionMoveAmount("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", 6));
         }
 
 

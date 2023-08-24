@@ -1,3 +1,4 @@
+using ChessLibrary.Utilities;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -117,6 +118,25 @@ namespace ChessLibrary.Engine
                 _ => throw new NotImplementedException()
             };
             return toRet;
+        }
+
+        public static string BoardPositionToString(int pos)
+        {
+            Vec2 grid = new Vec2(pos);
+            string horizontal = grid.X switch
+            {
+                0 => "a",
+                1 => "b",
+                2 => "c",
+                3 => "d",
+                4 => "e",
+                5 => "f",
+                6 => "g",
+                7 => "h",
+                _ => throw new NotImplementedException()
+            };
+            string vertical = grid.Y.ToString();
+            return horizontal + vertical;
         }
 
         /// <summary>
