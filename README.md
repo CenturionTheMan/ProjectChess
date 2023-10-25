@@ -29,7 +29,7 @@ For detailed information on how to use and work with Project Chess, please refer
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE). You are free to use, modify, and distribute the code as per the terms of the license.
+This project is licensed under the [MIT License](LICENSE.txt). You are free to use, modify, and distribute the code as per the terms of the license.
 
 ## Contact
 
