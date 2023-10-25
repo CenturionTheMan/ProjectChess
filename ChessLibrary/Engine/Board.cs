@@ -18,7 +18,6 @@ namespace ChessLibrary.Engine
         private uint[] boardCells;
         private List<int> piecePositions;
 
-
         /// <summary>
         /// Initializes a new instance of the Board class.
         /// </summary>

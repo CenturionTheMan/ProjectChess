@@ -16,6 +16,12 @@ namespace ChessGui_WF
             currentSideLabel.Text = text;
         }
 
+        private void OnPlayerWon(ChessColors wonColor)
+        {
+            string text = (wonColor == ChessColors.WHITE) ? "WHITE WON!" : "BLACK WON!";
+            currentSideLabel.Text = text;
+        }
+
         private void startButton_Click(object sender, EventArgs e)
         {
             if (!ChessStringsHandler.GetSetupFromFen(initPosTextBox.Text, out uint[] board, out ChessColors? currentSide, out bool[] castling, out int enPassantPosition, out int halfmoves, out int fullmove)) return;
@@ -24,6 +30,9 @@ namespace ChessGui_WF
             Game game = new Game(board,currentSide, castling, enPassantPosition, halfmoves, fullmove);
             game.OnCurrentPlayerChanged += HandleSideShowing;
             HandleSideShowing(currentSide.Value);
+
+            game.OnPlayerWon += OnPlayerWon;
+
             boardUserControl.InitGame(game);
         }
 
@@ -95,6 +104,11 @@ namespace ChessGui_WF
         private void Form1_MouseClick(object sender, MouseEventArgs e)
         {
             wasKeyDown = true;
+        }
+
+        private void checkBox1_CheckedChanged(object sender, EventArgs e)
+        {
+            boardUserControl.EnableBlackBot(blackBotCheckBox.Checked);
         }
     }
 }

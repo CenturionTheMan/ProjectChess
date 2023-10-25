@@ -44,6 +44,11 @@ namespace ChessLibrary.Engine
             enemyAttackZone = new bool[Board.BOARD_SIZE];
         }
 
+        public bool IsCurrentSideChecked()
+        {
+            return checkPossiblePos != null;
+        }
+
         public Move[] GetValidMoves()
         {
             Setup();

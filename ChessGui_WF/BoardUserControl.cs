@@ -1,4 +1,5 @@
-﻿using ChessLibrary.Engine;
+﻿using ChessLibrary.Bot;
+using ChessLibrary.Engine;
 using ChessLibrary.Utilities;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
@@ -26,6 +27,8 @@ namespace ChessGui_WF
 
         private Vec2 clickedMousePosFrom = null;
 
+        private bool isBlackBotOn;
+
         public BoardUserControl()
         {
             cellsWorldPositions = new Vec2[Board.BOARD_SINGLE_ROW_SIZE, Board.BOARD_SINGLE_ROW_SIZE];
@@ -38,9 +41,15 @@ namespace ChessGui_WF
             cellSize = new Vec2(cellWidth, cellHeight);
         }
 
+       
+
         public void InitGame(Game game)
         {
             this.game = game;
+            if (isBlackBotOn == true)
+            {
+                game.SetBot(new TestBot(game), ChessColors.BLACK);
+            }
             SetupPieces();
         }
 
@@ -83,6 +92,12 @@ namespace ChessGui_WF
             if (move != null)
             {
                 game.MakeMove(move);
+
+                if (isBlackBotOn && game.GetCurrentlyPlayingSide() == ChessColors.BLACK)
+                {
+                    game.BotTryMakeMove();
+                }
+
                 SetupPieces();
             }
             else
@@ -93,6 +108,25 @@ namespace ChessGui_WF
             clickedMousePosFrom = null;
             this.Invalidate();
             this.Update();
+
+            
+        }
+
+
+        public void EnableBlackBot(bool isEnabled)
+        {
+            if (game != null)
+            {
+                if (isEnabled == true)
+                {
+                    game.SetBot(new TestBot(game), ChessColors.BLACK);
+                }
+                else
+                {
+                    game.RemoveBot(ChessColors.BLACK);
+                }
+            }
+            isBlackBotOn = isEnabled;
         }
 
         public void MakeMove(Move move)
@@ -107,6 +141,7 @@ namespace ChessGui_WF
             this.Invalidate();
             this.Update();
 
+            
         }
 
         public void UnMakeLastMove()

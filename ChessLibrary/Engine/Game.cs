@@ -2,12 +2,15 @@ using ChessLibrary.Utilities;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using ChessLibrary.Bot;
 
 namespace ChessLibrary.Engine
 {
     public class Game
     {
         public Action<ChessColors> OnCurrentPlayerChanged;
+        public Action<ChessColors> OnPlayerWon;
+        public Action OnBotMove;
 
         public Stack<Move> PlayedMoves { get; private set; }
 
@@ -25,7 +28,10 @@ namespace ChessLibrary.Engine
         private bool[] castling;
         private int castlingChanged = 0;
 
-        private Move[] currentValidMoves = null;
+        private Move[]? currentValidMoves = null;
+
+        private ChessBot? whiteBot = null;
+        private ChessBot? blackBot = null;
 
         #region CTOR
 
@@ -84,8 +90,12 @@ namespace ChessLibrary.Engine
 
         #endregion CTOR
 
-
         #region GETTERS/SETTERS
+
+        public bool IsCheck()
+        {
+            return movesValidator.IsCurrentSideChecked();
+        }
 
         public bool[] GetCastling()
         {
@@ -143,7 +153,53 @@ namespace ChessLibrary.Engine
 
         #endregion WORKERS
 
+        #region BOT
 
+        public void RemoveBot(ChessColors botColor)
+        {
+            if (botColor == ChessColors.WHITE)
+            {
+                whiteBot = null;
+            }
+            else if (botColor == ChessColors.BLACK)
+            {
+                blackBot = null;
+            }
+        }
+
+        public void SetBot(ChessBot bot, ChessColors botColor)
+        {
+            if(botColor == ChessColors.WHITE)
+            {
+                whiteBot = bot;
+            }
+            else if (botColor == ChessColors.BLACK)
+            {
+                blackBot = bot;
+            }
+            else
+            {
+                return;
+            }
+
+            BotTryMakeMove();
+        }
+
+        public void BotTryMakeMove()
+        {
+            if(whiteBot != null && currentSide == ChessColors.WHITE)
+            {
+                MakeMove(whiteBot.GetBotMove());
+                OnBotMove?.Invoke();
+            }
+            else if(blackBot != null && currentSide == ChessColors.BLACK)
+            {
+                MakeMove(blackBot.GetBotMove());
+                OnBotMove?.Invoke();
+            }
+        }
+
+        #endregion
 
         public bool TryMakeMove(string moveString)
         {
@@ -187,6 +243,8 @@ namespace ChessLibrary.Engine
 
         public void MakeMove(Move move)
         {
+            if (move == null) throw new ArgumentNullException();
+
             if(move.TryGetAffectedPiecePos(out int affectedFromPos, out int? affectedToPos))
             {
                 if (affectedToPos != null) //castling
@@ -222,9 +280,15 @@ namespace ChessLibrary.Engine
 
             PlayedMoves.Push(move);
 
-            ChangeCurrentSide();
 
+            ChessColors prevPlayer = GetCurrentlyPlayingSide();
+            ChangeCurrentSide();
             currentValidMoves = movesValidator.GetValidMoves();
+
+            if(currentValidMoves.Length == 0 && movesValidator.IsCurrentSideChecked())
+            {
+                OnPlayerWon?.Invoke(prevPlayer);
+            }
         }
 
         //TEST!!!!
@@ -277,8 +341,6 @@ namespace ChessLibrary.Engine
 
             currentValidMoves = movesValidator.GetValidMoves();
         }
-
-
     }
 
 }
